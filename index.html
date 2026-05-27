@@ -1,0 +1,2716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal SAT PJOK — Sistem Pengumpulan Soal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --c-primary:    #1B3A6B;
+  --c-primary-h:  #122855;
+  --c-accent:     #C8990A;
+  --c-accent-l:   #FFF8E1;
+  --c-success:    #1A7A4A;
+  --c-success-bg: #E8F5EE;
+  --c-danger:     #C0392B;
+  --c-danger-bg:  #FDF0EE;
+  --c-warning:    #B7600A;
+  --c-warning-bg: #FFF3E0;
+  --c-info:       #1565C0;
+  --c-info-bg:    #E8F0FE;
+
+  --bg:       #F4F6FA;
+  --surface:  #FFFFFF;
+  --border:   #DDE1E9;
+  --border-h: #B0B8CC;
+
+  --text-1:   #111827;
+  --text-2:   #4B5563;
+  --text-3:   #9CA3AF;
+
+  --sidebar-w: 260px;
+  --header-h:  64px;
+  --radius:    8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+a { color: var(--c-primary); text-decoration: none; }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+#app { display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--c-primary);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+#sidebar-brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#sidebar-brand img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; }
+#sidebar-brand-text .title {
+  font-size: 13px; font-weight: 700; color: #fff;
+  text-transform: uppercase; letter-spacing: .05em; line-height: 1.2;
+}
+#sidebar-brand-text .sub {
+  font-size: 11px; color: rgba(255,255,255,.5); margin-top: 1px;
+}
+
+#sidebar-nav { flex: 1; padding: 16px 12px; }
+.nav-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em;
+  color: rgba(255,255,255,.35); text-transform: uppercase;
+  padding: 8px 8px 6px; margin-top: 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.65);
+  cursor: pointer; transition: all .15s; border: none; background: none;
+  width: 100%; text-align: left; margin-bottom: 2px;
+}
+.nav-item i { width: 16px; text-align: center; font-size: 14px; }
+.nav-item:hover { background: rgba(255,255,255,.1); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,.15); color: #fff; font-weight: 600; }
+.nav-item .badge {
+  margin-left: auto; background: var(--c-accent);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+}
+
+#sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid rgba(255,255,255,.1);
+}
+#sidebar-user-info {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 8px; margin-bottom: 8px;
+}
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+#sidebar-user-info .user-name {
+  font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2;
+}
+#sidebar-user-info .user-role {
+  font-size: 11px; color: rgba(255,255,255,.5);
+}
+.btn-logout {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 8px; border-radius: var(--radius);
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600;
+  transition: all .15s; text-transform: uppercase; letter-spacing: .05em;
+}
+.btn-logout:hover { background: rgba(220,38,38,.3); color: #fff; border-color: transparent; }
+
+/* MAIN */
+#main-content {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* TOPBAR */
+#topbar {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  position: sticky; top: 0; z-index: 50;
+}
+#topbar-breadcrumb .page-label {
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+#topbar-breadcrumb .page-title {
+  font-size: 17px; font-weight: 700; color: var(--text-1); line-height: 1.2;
+}
+#topbar-right { display: flex; align-items: center; gap: 12px; }
+.cloud-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.cloud-badge .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.dot-online  { background: #22C55E; box-shadow: 0 0 0 2px rgba(34,197,94,.2); }
+.dot-offline { background: #EF4444; }
+.dot-sync    { background: #F59E0B; animation: pulse 1s infinite; }
+
+#topbar-refresh {
+  width: 36px; height: 36px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-2); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+#topbar-refresh:hover { border-color: var(--c-primary); color: var(--c-primary); }
+
+/* PAGE CONTENT */
+#page-content { flex: 1; padding: 28px; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* ============================================================
+   LOGIN PAGE
+   ============================================================ */
+#login-page {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #0F2347 0%, #1B3A6B 50%, #122855 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.login-logo {
+  text-align: center; margin-bottom: 28px;
+}
+.login-logo img { width: 56px; height: 56px; object-fit: contain; margin-bottom: 12px; }
+.login-logo h1 {
+  font-size: 22px; font-weight: 800; color: var(--c-primary);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.login-logo p {
+  font-size: 12px; color: var(--text-3); margin-top: 4px;
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 500;
+}
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+.form-input {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; color: var(--text-1);
+  transition: border-color .15s;
+  background: #FAFBFC;
+}
+.form-input:focus { outline: none; border-color: var(--c-primary); background: #fff; }
+.form-input.has-icon { padding-left: 40px; }
+.input-wrap { position: relative; }
+.input-wrap i {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--text-3); font-size: 14px;
+}
+.btn-primary {
+  width: 100%; padding: 12px;
+  background: var(--c-primary); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: var(--c-primary-h); }
+.btn-primary:active { transform: scale(.98); }
+.login-error {
+  background: var(--c-danger-bg); color: var(--c-danger);
+  border: 1px solid rgba(192,57,43,.15);
+  border-radius: var(--radius); padding: 10px 14px;
+  font-size: 13px; font-weight: 500; margin-top: 12px;
+  display: none;
+}
+
+/* ============================================================
+   ANNOUNCEMENT BANNER
+   ============================================================ */
+#announcement-bar {
+  background: var(--c-accent-l);
+  border-bottom: 2px solid var(--c-accent);
+  padding: 10px 28px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--c-warning);
+  font-weight: 500;
+}
+#announcement-bar i { color: var(--c-accent); flex-shrink: 0; }
+#announcement-bar .close-ann {
+  margin-left: auto; background: none; border: none;
+  color: var(--c-warning); font-size: 16px; padding: 0 4px;
+}
+
+/* ============================================================
+   CARDS & COMPONENTS
+   ============================================================ */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.card-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header h3 {
+  font-size: 14px; font-weight: 700; color: var(--text-1);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.card-body { padding: 20px 22px; }
+
+/* STAT CARDS */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.stat-card .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; }
+.stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--text-1); line-height: 1.1; margin-top: 4px; }
+.stat-card .stat-sub   { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+/* STATUS BADGES */
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.badge-pending   { background: #F3F4F6; color: #6B7280; }
+.badge-uploaded  { background: var(--c-success-bg); color: var(--c-success); }
+.badge-revision  { background: var(--c-warning-bg); color: var(--c-warning); }
+.badge-locked    { background: var(--c-info-bg); color: var(--c-info); }
+.badge-late      { background: var(--c-danger-bg); color: var(--c-danger); }
+
+/* PROGRESS BAR */
+.progress-bar-wrap { background: #EEF0F5; border-radius: 99px; height: 8px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 99px; background: var(--c-primary); transition: width .4s ease; }
+.progress-bar-fill.good   { background: var(--c-success); }
+.progress-bar-fill.medium { background: var(--c-accent); }
+
+/* TABLES */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  padding: 11px 14px; text-align: left;
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .07em;
+  background: #F8F9FB; border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 13px 14px; border-bottom: 1px solid #F0F2F6;
+  color: var(--text-1); vertical-align: middle;
+}
+.data-table tr:hover td { background: #FAFBFC; }
+.data-table .cell-name { font-weight: 600; }
+.data-table .cell-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* TABS */
+.tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab-btn {
+  padding: 9px 16px; border-radius: var(--radius) var(--radius) 0 0;
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  background: none; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all .15s;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--c-primary); }
+.tab-btn.active { color: var(--c-primary); border-bottom-color: var(--c-primary); background: rgba(27,58,107,.04); }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; border: 1px solid transparent;
+  transition: all .15s; cursor: pointer; font-family: inherit;
+}
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-outline { background: #fff; border-color: var(--border); color: var(--text-1); }
+.btn-outline:hover { border-color: var(--c-primary); color: var(--c-primary); }
+.btn-solid-primary { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+.btn-solid-primary:hover { background: var(--c-primary-h); }
+.btn-solid-success { background: var(--c-success); color: #fff; border-color: var(--c-success); }
+.btn-solid-danger  { background: var(--c-danger); color: #fff; border-color: var(--c-danger); }
+.btn-solid-warning { background: #D97706; color: #fff; border-color: #D97706; }
+.btn-ghost { background: none; border: none; color: var(--text-2); padding: 6px 8px; }
+.btn-ghost:hover { color: var(--c-primary); background: #F0F4FF; border-radius: var(--radius); }
+
+/* UPLOAD CARDS */
+.upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media(max-width:700px){ .upload-grid { grid-template-columns: 1fr; } }
+.upload-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px 20px;
+  text-align: center; cursor: pointer; transition: all .2s;
+  position: relative;
+}
+.upload-card:hover:not(.locked) {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(27,58,107,.06);
+  transform: translateY(-2px);
+}
+.upload-card.done   { border-color: #86EFAC; background: #F0FDF4; }
+.upload-card.locked { cursor: not-allowed; opacity: .7; background: #F8F9FB; }
+.upload-card.late   { border-color: #FCA5A5; background: #FEF2F2; }
+.upload-card.drag-over { border-color: var(--c-primary); background: #EEF2FF; border-style: dashed; }
+.upload-icon { font-size: 36px; margin-bottom: 12px; color: var(--text-3); }
+.upload-card.done .upload-icon   { color: var(--c-success); }
+.upload-card.locked .upload-icon { color: var(--text-3); }
+.upload-card h4 { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 6px; }
+.upload-card .upload-filename {
+  font-size: 11px; color: var(--text-3); margin-bottom: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
+.upload-card .upload-time { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+.upload-card .lock-label {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--c-info-bg); color: var(--c-info);
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px; text-transform: uppercase;
+}
+
+/* DEADLINE BADGE */
+.deadline-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+}
+.deadline-badge.safe    { background: var(--c-success-bg); color: var(--c-success); }
+.deadline-badge.warning { background: var(--c-warning-bg); color: var(--c-warning); }
+.deadline-badge.danger  { background: var(--c-danger-bg);  color: var(--c-danger); }
+.deadline-badge.expired { background: #F3F4F6; color: var(--text-3); }
+
+/* TOAST */
+#toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px; border-radius: var(--radius-lg);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-md);
+  animation: slideIn .25s ease;
+  min-width: 280px; max-width: 380px;
+}
+.toast-success { background: var(--surface); border-left: 4px solid #22C55E; color: var(--text-1); }
+.toast-error   { background: var(--surface); border-left: 4px solid #EF4444; color: var(--text-1); }
+.toast-info    { background: var(--surface); border-left: 4px solid var(--c-primary); color: var(--text-1); }
+.toast-warn    { background: var(--surface); border-left: 4px solid var(--c-accent); color: var(--text-1); }
+.toast i { font-size: 16px; }
+.toast-success i { color: #22C55E; }
+.toast-error i   { color: #EF4444; }
+.toast-info i    { color: var(--c-primary); }
+.toast-warn i    { color: var(--c-accent); }
+
+/* MODALS */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(17,24,39,.5);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 480px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.15);
+  animation: scaleIn .2s ease;
+}
+.modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 15px; font-weight: 700; color: var(--text-1); }
+.modal-close { background: none; border: none; color: var(--text-3); font-size: 18px; cursor: pointer; }
+.modal-close:hover { color: var(--text-1); }
+.modal-body { padding: 20px 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* LOADING OVERLAY */
+#loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,.9); backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px;
+}
+#loading-overlay .spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+#loading-overlay p { font-size: 14px; font-weight: 600; color: var(--text-2); }
+
+/* ============================================================
+   REVISION REQUEST CARD
+   ============================================================ */
+.revision-card {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 10px;
+}
+.revision-card .rev-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.revision-card .rev-meta   { font-size: 12px; color: var(--text-3); }
+.revision-card .rev-reason { font-size: 13px; color: var(--text-2); background: #F8F9FB; padding: 8px 10px; border-radius: 6px; margin-top: 8px; }
+
+/* ============================================================
+   COUNTDOWN TIMER
+   ============================================================ */
+.countdown-wrap { display: flex; gap: 8px; align-items: center; }
+.countdown-unit { text-align: center; }
+.countdown-unit .num { font-size: 22px; font-weight: 800; color: var(--c-primary); line-height: 1; }
+.countdown-unit .lbl { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+.countdown-sep { font-size: 20px; font-weight: 700; color: var(--text-3); margin-bottom: 10px; }
+
+/* FORM ELEMENTS */
+.form-group { margin-bottom: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
+.form-control {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 13px; color: var(--text-1);
+  background: #FAFBFC; transition: border-color .15s;
+}
+.form-control:focus { outline: none; border-color: var(--c-primary); background: #fff; }
+.form-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle {
+  position: relative; width: 40px; height: 22px;
+  border-radius: 11px; background: var(--border);
+  transition: background .2s; cursor: pointer; border: none;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: ''; position: absolute; left: 3px; top: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle.on { background: var(--c-primary); }
+.toggle.on::after { transform: translateX(18px); }
+.toggle-label { font-size: 13px; color: var(--text-1); font-weight: 500; }
+
+/* ============================================================
+   ADMIN PROGRESS VIEW
+   ============================================================ */
+.class-summary-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 20px; }
+@media(max-width:800px){ .class-summary-grid { grid-template-columns: repeat(3,1fr); } }
+.class-summary-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px; cursor: pointer;
+  transition: all .15s; text-align: center;
+}
+.class-summary-card:hover { border-color: var(--c-primary); box-shadow: var(--shadow-sm); }
+.class-summary-card.active { border-color: var(--c-primary); background: rgba(27,58,107,.04); }
+.class-summary-card .class-num { font-size: 20px; font-weight: 800; color: var(--c-primary); }
+.class-summary-card .class-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; }
+.class-summary-card .class-pct { font-size: 13px; font-weight: 700; color: var(--text-2); margin-top: 4px; }
+
+/* UNLOCK NOTIF badge for admin */
+.notif-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c-danger); display: inline-block; margin-left: 4px;
+  animation: pulse 1.5s infinite;
+}
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+@media print {
+  #sidebar, #topbar, #toast-container, .no-print, button { display: none !important; }
+  #main-content { margin-left: 0; }
+  body { background: white; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes pulse    { 0%,100%{ opacity:1 } 50%{ opacity:.4 } }
+@keyframes slideIn  { from{ transform:translateX(20px); opacity:0 } to{ transform:none; opacity:1 } }
+@keyframes scaleIn  { from{ transform:scale(.95); opacity:0 } to{ transform:none; opacity:1 } }
+@keyframes fadeIn   { from{ opacity:0 } to{ opacity:1 } }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOADING OVERLAY
+     ============================================================ -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p id="loading-text">Menghubungkan ke sistem...</p>
+</div>
+
+<!-- ============================================================
+     TOAST CONTAINER
+     ============================================================ -->
+<div id="toast-container"></div>
+
+<!-- ============================================================
+     LOGIN PAGE
+     ============================================================ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://github.com/strafrechtsBoys/pendaftaran_o2sn_psg/blob/main/Permohonan%20Proposal%20CSR%20Raker%20KKG%20PJOK%20PSG.png?raw=true" alt="Logo SAT">
+      <h1>Portal SAT</h1>
+      <p>Sistem Pengumpulan Soal PJOK Kelas 1–5</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" id="inp-username" class="form-input has-icon" placeholder="Masukkan username" autocomplete="off">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="input-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="inp-password" class="form-input has-icon" placeholder="Masukkan password">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="handleLogin()">
+      <i class="fas fa-sign-in-alt" style="margin-right:6px"></i> Masuk
+    </button>
+    <div id="login-error" class="login-error">
+      <i class="fas fa-exclamation-circle"></i> Username atau password tidak valid.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<div id="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div id="sidebar-brand">
+      <img src="https://github.com/strafrechtsBoys/pendaftaran_o2sn_psg/blob/main/Permohonan%20Proposal%20CSR%20Raker%20KKG%20PJOK%20PSG.png?raw=true" alt="Logo">
+      <div id="sidebar-brand-text">
+        <div class="title">Portal SAT</div>
+        <div class="sub">PJOK Kelas 1–5</div>
+      </div>
+    </div>
+
+    <nav id="sidebar-nav">
+      <!-- Nav Penulis -->
+      <div id="nav-writer" style="display:none">
+        <div class="nav-section-label">Menu Penulis</div>
+        <button class="nav-item" data-view="writer-workspace" onclick="switchView('writer-workspace')">
+          <i class="fas fa-layer-group"></i> Ruang Kerja
+        </button>
+        <button class="nav-item" data-view="writer-history" onclick="switchView('writer-history')">
+          <i class="fas fa-history"></i> Riwayat Upload
+        </button>
+        <button class="nav-item" data-view="writer-account" onclick="switchView('writer-account')">
+          <i class="fas fa-user-cog"></i> Akun Saya
+        </button>
+      </div>
+
+      <!-- Nav Admin -->
+      <div id="nav-admin" style="display:none">
+        <div class="nav-section-label">Monitor</div>
+        <button class="nav-item" data-view="admin-overview" onclick="switchView('admin-overview')">
+          <i class="fas fa-chart-line"></i> Ringkasan
+        </button>
+        <button class="nav-item" data-view="admin-progress" onclick="switchView('admin-progress')">
+          <i class="fas fa-tasks"></i> Progres Kelas
+        </button>
+        <button class="nav-item" data-view="admin-revisions" onclick="switchView('admin-revisions')">
+          <i class="fas fa-redo-alt"></i> Permintaan Revisi
+          <span class="badge" id="badge-revision" style="display:none">0</span>
+        </button>
+        <div class="nav-section-label">Manajemen</div>
+        <button class="nav-item" data-view="admin-users" onclick="switchView('admin-users')">
+          <i class="fas fa-users"></i> Penulis
+        </button>
+        <button class="nav-item" data-view="admin-config" onclick="switchView('admin-config')">
+          <i class="fas fa-sliders-h"></i> Konfigurasi
+        </button>
+        <button class="nav-item" data-view="admin-broadcast" onclick="switchView('admin-broadcast')">
+          <i class="fas fa-bullhorn"></i> Pengumuman
+        </button>
+      </div>
+    </nav>
+
+    <div id="sidebar-footer">
+      <div id="sidebar-user-info">
+        <div class="avatar" id="sidebar-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-name">—</div>
+          <div class="user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">
+        <i class="fas fa-sign-out-alt"></i> Keluar
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content">
+
+    <!-- ANNOUNCEMENT BAR -->
+    <div id="announcement-bar">
+      <i class="fas fa-bullhorn"></i>
+      <span id="announcement-text"></span>
+      <button class="close-ann" onclick="closeAnnouncement()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- TOPBAR -->
+    <header id="topbar">
+      <div id="topbar-breadcrumb">
+        <div class="page-label" id="page-label">Portal SAT</div>
+        <div class="page-title" id="page-title">Memuat...</div>
+      </div>
+      <div id="topbar-right">
+        <div class="cloud-badge" id="cloud-badge">
+          <div class="dot dot-sync" id="cloud-dot"></div>
+          <span id="cloud-text">Menghubungkan</span>
+        </div>
+        <button id="topbar-refresh" onclick="refreshApp()" title="Refresh data">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div id="page-content">
+
+      <!-- ====================================================
+           WRITER: RUANG KERJA
+           ==================================================== -->
+      <div class="view" id="view-writer-workspace">
+        <!-- Deadline & info bar -->
+        <div id="writer-info-bar" class="card" style="margin-bottom:20px; border-left: 4px solid var(--c-primary)">
+          <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+            <div>
+              <div style="font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Sesi Pengumpulan</div>
+              <div id="writer-session-title" style="font-size:16px;font-weight:700;color:var(--text-1);margin-top:2px">Pengumpulan Soal SAT</div>
+            </div>
+            <a id="writer-link-tugas" href="#" target="_blank" class="btn btn-outline no-print" style="display:none">
+              <i class="fas fa-table"></i> Pembagian Tugas
+            </a>
+          </div>
+        </div>
+
+        <!-- Kelas tabs -->
+        <div class="tab-bar" id="writer-class-tabs"></div>
+
+        <!-- Upload panel -->
+        <div class="card">
+          <div class="card-header">
+            <h3 id="writer-panel-title">Upload Dokumen</h3>
+            <div id="writer-deadline-display"></div>
+          </div>
+          <div class="card-body">
+            <div id="writer-lock-notice" style="display:none" class="card" style="border-left:4px solid var(--c-info); margin-bottom:16px">
+              <div class="card-body" style="display:flex;align-items:center;gap:10px;color:var(--c-info)">
+                <i class="fas fa-lock"></i>
+                <span style="font-size:13px;font-weight:500">Pengumpulan untuk kelas ini sudah ditutup oleh admin.</span>
+              </div>
+            </div>
+            <div class="upload-grid" id="upload-grid">
+              <!-- diisi dinamis -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           WRITER: RIWAYAT UPLOAD
+           ==================================================== -->
+      <div class="view" id="view-writer-history">
+        <div class="card">
+          <div class="card-header">
+            <h3>Riwayat Upload Saya</h3>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table class="data-table" id="table-writer-history">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Kelas</th>
+                  <th>Jenis</th>
+                  <th>Aksi</th>
+                  <th>File</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-writer-history">
+                <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-3)">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           WRITER: AKUN
+           ==================================================== -->
+      <div class="view" id="view-writer-account">
+        <div style="max-width:440px">
+          <div class="card">
+            <div class="card-header"><h3>Ubah Password</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Password Baru</label>
+                <input type="password" id="inp-new-pass" class="form-control" placeholder="Min. 4 karakter">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Konfirmasi Password</label>
+                <input type="password" id="inp-confirm-pass" class="form-control" placeholder="Ulangi password baru">
+              </div>
+              <button class="btn btn-solid-primary" onclick="updateSelfPass()">
+                <i class="fas fa-save"></i> Simpan Password
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           ADMIN: RINGKASAN
+           ==================================================== -->
+      <div class="view" id="view-admin-overview">
+        <div class="stat-grid" id="overview-stats" style="margin-bottom:24px"></div>
+        <div class="class-summary-grid" id="class-summary-grid"></div>
+        <div class="card">
+          <div class="card-header"><h3>Progres Per Kelas</h3></div>
+          <div class="card-body" id="overview-progress-bars"></div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           ADMIN: PROGRES KELAS
+           ==================================================== -->
+      <div class="view" id="view-admin-progress">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div class="tab-bar" id="admin-class-tabs" style="margin-bottom:0;border-bottom:none;gap:6px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm no-print" onclick="printProgress()">
+              <i class="fas fa-print"></i> Cetak
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3 id="progress-table-title">Progres Kelas 1</h3>
+            <div id="progress-overall-badge"></div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:220px">Penulis</th>
+                  <th style="width:120px;text-align:center">Kartu Soal</th>
+                  <th style="width:120px;text-align:center">Kisi-kisi</th>
+                  <th style="width:120px;text-align:center">Naskah Soal</th>
+                  <th>Link Drive</th>
+                  <th class="no-print">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-admin-progress">
+                <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-3)">Pilih kelas di atas</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           ADMIN: PERMINTAAN REVISI
+           ==================================================== -->
+      <div class="view" id="view-admin-revisions">
+        <div class="card">
+          <div class="card-header">
+            <h3>Permintaan Revisi Penulis</h3>
+            <span id="revision-count-label" class="badge badge-pending">0 pending</span>
+          </div>
+          <div class="card-body" id="revisions-container">
+            <div style="text-align:center;padding:30px;color:var(--text-3)">Memuat...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           ADMIN: PENULIS
+           ==================================================== -->
+      <div class="view" id="view-admin-users">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;gap:8px">
+            <input type="text" id="search-users" class="form-control" placeholder="Cari nama / username..." style="width:220px" oninput="renderUsersTable()">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="downloadBulkTemplate()">
+              <i class="fas fa-download"></i> Template CSV
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('inp-bulk').click()">
+              <i class="fas fa-upload"></i> Import CSV
+            </button>
+            <input type="file" id="inp-bulk" accept=".csv" style="display:none" onchange="processBulkUpload(this.files)">
+            <button class="btn btn-solid-primary btn-sm" onclick="openModal('modal-add-user')">
+              <i class="fas fa-plus"></i> Tambah Penulis
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Instansi</th>
+                  <th>Username</th>
+                  <th>No. WA</th>
+                  <th>Kelas Ditugaskan</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-users"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           ADMIN: KONFIGURASI
+           ==================================================== -->
+      <div class="view" id="view-admin-config">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px">
+
+          <!-- GAS & Drive Config -->
+          <div class="card">
+            <div class="card-header"><h3>Google Apps Script</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">URL GAS Web App</label>
+                <input type="text" id="conf-gas-url" class="form-control" placeholder="https://script.google.com/macros/s/...">
+                <div class="form-hint">Paste URL dari deploy GAS kamu</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="testGasUrl()">
+                <i class="fas fa-plug"></i> Test Koneksi GAS
+              </button>
+            </div>
+          </div>
+
+          <!-- Admin Password -->
+          <div class="card">
+            <div class="card-header"><h3>Password Admin</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Password Baru</label>
+                <input type="password" id="conf-admin-pass" class="form-control" placeholder="Min. 4 karakter">
+              </div>
+              <button class="btn btn-solid-primary btn-sm" onclick="updateAdminPass()">
+                <i class="fas fa-save"></i> Simpan
+              </button>
+            </div>
+          </div>
+
+          <!-- Drive Links per Kelas -->
+          <div class="card" style="grid-column:1/-1">
+            <div class="card-header"><h3>Folder Google Drive Per Kelas</h3></div>
+            <div class="card-body">
+              <div class="tab-bar" id="conf-class-tabs" style="margin-bottom:16px"></div>
+              <div id="conf-class-fields">
+                <!-- diisi dinamis -->
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-outline btn-sm" onclick="pingDriveFolder()">
+                  <i class="fas fa-check-circle"></i> Verifikasi Folder ID
+                </button>
+                <button class="btn btn-solid-primary btn-sm" onclick="saveDriveConfig()">
+                  <i class="fas fa-save"></i> Simpan Konfigurasi Drive
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deadline per Kelas -->
+          <div class="card" style="grid-column:1/-1">
+            <div class="card-header"><h3>Deadline Pengumpulan Per Kelas</h3></div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" id="deadline-inputs"></div>
+              <div style="margin-top:12px">
+                <button class="btn btn-solid-primary btn-sm" onclick="saveDeadlines()">
+                  <i class="fas fa-clock"></i> Simpan Deadline
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fonnte WA Config -->
+          <div class="card">
+            <div class="card-header"><h3>Notifikasi WhatsApp</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Fonnte API Token</label>
+                <input type="text" id="conf-fonnte-token" class="form-control" placeholder="Token dari fonnte.com">
+                <div class="form-hint">Daftar gratis di fonnte.com</div>
+              </div>
+              <button class="btn btn-solid-primary btn-sm" onclick="saveFonnteConfig()">
+                <i class="fas fa-save"></i> Simpan Token
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="testWaNotif()" style="margin-left:6px">
+                <i class="fab fa-whatsapp"></i> Test Kirim WA
+              </button>
+            </div>
+          </div>
+
+          <!-- Link Tugas & Visibilitas -->
+          <div class="card">
+            <div class="card-header"><h3>Visibilitas & Tautan</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Link Pembagian Tugas</label>
+                <input type="text" id="conf-link-tugas" class="form-control" placeholder="https://docs.google.com/...">
+              </div>
+              <div class="form-group">
+                <div class="toggle-wrap">
+                  <button class="toggle" id="tog-show-drive" onclick="this.classList.toggle('on')"></button>
+                  <span class="toggle-label">Tampilkan link Drive ke Penulis</span>
+                </div>
+              </div>
+              <button class="btn btn-solid-primary btn-sm" onclick="saveVisibilityConfig()">
+                <i class="fas fa-save"></i> Simpan
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ====================================================
+           ADMIN: PENGUMUMAN
+           ==================================================== -->
+      <div class="view" id="view-admin-broadcast">
+        <div style="max-width:600px">
+          <div class="card">
+            <div class="card-header"><h3>Pengumuman In-App</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Teks Pengumuman</label>
+                <textarea id="inp-announcement" class="form-control" rows="3" placeholder="Tulis pengumuman untuk semua penulis..."></textarea>
+              </div>
+              <div class="form-group">
+                <div class="toggle-wrap">
+                  <button class="toggle" id="tog-announcement" onclick="this.classList.toggle('on')"></button>
+                  <span class="toggle-label">Aktifkan pengumuman</span>
+                </div>
+              </div>
+              <button class="btn btn-solid-primary" onclick="saveAnnouncement()">
+                <i class="fas fa-bullhorn"></i> Publish Pengumuman
+              </button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:20px">
+            <div class="card-header"><h3>Kirim Reminder Deadline via WA</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Target Kelas</label>
+                <select id="wa-reminder-kelas" class="form-control">
+                  <option value="all">Semua Kelas</option>
+                  <option value="kelas1">Kelas 1</option>
+                  <option value="kelas2">Kelas 2</option>
+                  <option value="kelas3">Kelas 3</option>
+                  <option value="kelas4">Kelas 4</option>
+                  <option value="kelas5">Kelas 5</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Filter Penulis</label>
+                <select id="wa-reminder-filter" class="form-control">
+                  <option value="pending">Hanya yang belum lengkap</option>
+                  <option value="all">Semua penulis</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Template Pesan</label>
+                <textarea id="wa-reminder-msg" class="form-control" rows="4">Yth. {nama}, 
+Mengingatkan bahwa batas waktu pengumpulan soal SAT Kelas {kelas} adalah {deadline}. 
+Segera upload berkas melalui Portal SAT. Terima kasih.</textarea>
+              </div>
+              <button class="btn btn-solid-primary" onclick="sendBulkWAReminder()">
+                <i class="fab fa-whatsapp"></i> Kirim Reminder WA
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
+
+<!-- Modal: Tambah Penulis -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Tambah Penulis Baru</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-user')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nama Instansi / Sekolah</label>
+        <input type="text" id="add-name" class="form-control" placeholder="SDN Contoh 01">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="add-username" class="form-control" placeholder="sdn_contoh_01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="text" id="add-password" class="form-control" placeholder="password123">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. WhatsApp (opsional)</label>
+        <input type="text" id="add-phone" class="form-control" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kelas yang Ditugaskan</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px" id="add-classes">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" value="kelas1" checked> Kelas 1</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" value="kelas2" checked> Kelas 2</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" value="kelas3" checked> Kelas 3</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" value="kelas4" checked> Kelas 4</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" value="kelas5" checked> Kelas 5</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-user')">Batal</button>
+      <button class="btn btn-solid-primary" onclick="saveNewUser()">Simpan Penulis</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ajukan Revisi -->
+<div class="modal-overlay" id="modal-revision">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Ajukan Permintaan Revisi</h3>
+      <button class="modal-close" onclick="closeModal('modal-revision')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-revision-info" style="margin-bottom:14px;font-size:13px;color:var(--text-2)"></div>
+      <div class="form-group">
+        <label class="form-label">Alasan Revisi</label>
+        <textarea id="inp-revision-reason" class="form-control" rows="3" placeholder="Jelaskan kenapa file ini perlu direvisi..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-revision')">Batal</button>
+      <button class="btn btn-solid-warning" onclick="submitRevisionRequest()">Ajukan Revisi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Konfirmasi -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <h3 id="modal-confirm-title">Konfirmasi</h3>
+      <button class="modal-close" onclick="closeModal('modal-confirm')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p id="modal-confirm-msg" style="font-size:14px;color:var(--text-2)"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-confirm')">Batal</button>
+      <button class="btn btn-solid-danger" id="modal-confirm-ok" onclick="">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Penulis -->
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit Penulis</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-user')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-user-id">
+      <div class="form-group">
+        <label class="form-label">Nama Instansi</label>
+        <input type="text" id="edit-name" class="form-control">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="edit-username" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password Baru (kosongkan jika tidak ganti)</label>
+          <input type="text" id="edit-password" class="form-control" placeholder="Biarkan kosong">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. WhatsApp</label>
+        <input type="text" id="edit-phone" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kelas yang Ditugaskan</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px" id="edit-classes">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" id="edit-k1" value="kelas1"> Kelas 1</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" id="edit-k2" value="kelas2"> Kelas 2</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" id="edit-k3" value="kelas3"> Kelas 3</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" id="edit-k4" value="kelas4"> Kelas 4</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="checkbox" id="edit-k5" value="kelas5"> Kelas 5</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-user')">Batal</button>
+      <button class="btn btn-solid-primary" onclick="saveEditUser()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI — ISI SESUAI SETUP KAMU
+// ============================================================
+const SUPABASE_URL = 'https://zdmcaxpytcgqgoawligy.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'sb_publishable_xzuL8rrFl-C8FFekw0V9Qg_SV6_hsjp';
+
+// ============================================================
+// INIT SUPABASE
+// ============================================================
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE
+// ============================================================
+let session    = null;   // { id, name, username, role, assigned_classes, phone }
+let appConfig  = null;   // baris dari table config
+let allUsers   = [];     // semua user (admin only)
+let allSubs    = [];     // semua submissions (admin only)
+let GAS_URL    = '';     // diambil dari config atau localStorage
+
+let activeWriterClass = 'kelas1';
+let activeAdminClass  = 'kelas1';
+let activeConfClass   = 'kelas1';
+
+let pendingRevisionPayload = null; // { kelas, type } untuk modal revisi
+
+const KELAS_LIST = ['kelas1','kelas2','kelas3','kelas4','kelas5'];
+const TYPE_LIST  = ['kartu','kisi','naskah'];
+const TYPE_LABEL = { kartu: 'Kartu Soal', kisi: 'Kisi-kisi', naskah: 'Naskah Soal' };
+const TYPE_ICON  = { kartu: 'fas fa-file-word', kisi: 'fas fa-list-check', naskah: 'fas fa-file-lines' };
+
+// ============================================================
+// BOOT
+// ============================================================
+window.onload = async function() {
+  showLoading('Menghubungkan ke database...');
+  try {
+    const { data, error } = await sb.from('config').select('*').eq('id', 1).single();
+    if (error) throw error;
+    appConfig = data;
+    GAS_URL   = localStorage.getItem('sat_gas_url') || '';
+    setCloudStatus('online');
+  } catch (err) {
+    console.error('Boot error:', err);
+    setCloudStatus('offline');
+  }
+  hideLoading();
+  checkSession();
+};
+
+// ============================================================
+// SESSION
+// ============================================================
+function checkSession() {
+  const saved = sessionStorage.getItem('sat_session');
+  if (saved) {
+    session = JSON.parse(saved);
+    showMainApp();
+  } else {
+    showLogin();
+  }
+}
+
+async function handleLogin() {
+  const u = document.getElementById('inp-username').value.trim();
+  const p = document.getElementById('inp-password').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!u || !p) { errEl.style.display = 'block'; errEl.innerHTML = 'Lengkapi username dan password.'; return; }
+
+  // Cek admin
+  if (u === 'admin') {
+    const adminPass = appConfig ? appConfig.admin_password : 'admin123';
+    if (p === adminPass) {
+      session = { id: null, name: 'Admin Pusat', username: 'admin', role: 'admin', assigned_classes: KELAS_LIST };
+      sessionStorage.setItem('sat_session', JSON.stringify(session));
+      showMainApp();
+      return;
+    }
+  }
+
+  // Cek penulis dari Supabase
+  showLoading('Memverifikasi...');
+  try {
+    const { data, error } = await sb.from('users')
+      .select('*')
+      .eq('username', u)
+      .eq('password', p)
+      .eq('is_active', true)
+      .single();
+    hideLoading();
+    if (error || !data) {
+      errEl.style.display = 'block';
+      errEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Username atau password tidak valid.';
+      return;
+    }
+    session = { ...data, role: 'writer' };
+    sessionStorage.setItem('sat_session', JSON.stringify(session));
+    showMainApp();
+  } catch (err) {
+    hideLoading();
+    errEl.style.display = 'block';
+    errEl.innerHTML = 'Koneksi gagal. Coba lagi.';
+  }
+}
+
+document.getElementById('inp-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+
+function handleLogout() {
+  sessionStorage.removeItem('sat_session');
+  location.reload();
+}
+
+// ============================================================
+// UI ROUTING
+// ============================================================
+function showLogin() {
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function showMainApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // Sidebar user info
+  document.getElementById('sidebar-name').textContent  = session.name;
+  document.getElementById('sidebar-avatar').textContent = session.name.charAt(0).toUpperCase();
+  document.getElementById('sidebar-role').textContent  = session.role === 'admin' ? 'Administrator' : 'Penulis Soal';
+
+  if (session.role === 'admin') {
+    document.getElementById('nav-admin').style.display = 'block';
+    document.getElementById('nav-writer').style.display = 'none';
+    loadAdminData().then(() => {
+      switchView('admin-overview');
+    });
+  } else {
+    document.getElementById('nav-writer').style.display = 'block';
+    document.getElementById('nav-admin').style.display = 'none';
+    initWriterTabs();
+    switchView('writer-workspace');
+    loadWriterData();
+  }
+
+  // Announcement
+  if (appConfig && appConfig.announcement_active && appConfig.announcement) {
+    document.getElementById('announcement-text').textContent = appConfig.announcement;
+    document.getElementById('announcement-bar').style.display = 'flex';
+  }
+}
+
+function switchView(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+
+  const view = document.getElementById('view-' + viewId);
+  if (view) view.classList.add('active');
+
+  const btn = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+  if (btn) btn.classList.add('active');
+
+  const titles = {
+    'writer-workspace': ['Penulis', 'Ruang Kerja Soal'],
+    'writer-history':   ['Penulis', 'Riwayat Upload'],
+    'writer-account':   ['Penulis', 'Akun Saya'],
+    'admin-overview':   ['Admin', 'Ringkasan'],
+    'admin-progress':   ['Admin', 'Progres Kelas'],
+    'admin-revisions':  ['Admin', 'Permintaan Revisi'],
+    'admin-users':      ['Admin', 'Manajemen Penulis'],
+    'admin-config':     ['Admin', 'Konfigurasi Sistem'],
+    'admin-broadcast':  ['Admin', 'Pengumuman & Notifikasi'],
+  };
+  const t = titles[viewId] || ['', viewId];
+  document.getElementById('page-label').textContent = t[0];
+  document.getElementById('page-title').textContent  = t[1];
+
+  // On-enter actions
+  if (viewId === 'admin-revisions') loadRevisions();
+  if (viewId === 'admin-users')     renderUsersTable();
+  if (viewId === 'admin-config')    loadConfigForm();
+  if (viewId === 'admin-broadcast') loadBroadcastForm();
+  if (viewId === 'writer-history')  loadWriterHistory();
+  if (viewId === 'admin-progress')  renderProgressTable();
+}
+
+function closeAnnouncement() {
+  document.getElementById('announcement-bar').style.display = 'none';
+}
+
+// ============================================================
+// WRITER — INIT & DATA
+// ============================================================
+function initWriterTabs() {
+  const assigned = session.assigned_classes || KELAS_LIST;
+  const tabs = document.getElementById('writer-class-tabs');
+  tabs.innerHTML = '';
+  assigned.forEach((k, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = 'Kelas ' + k.replace('kelas','');
+    btn.onclick = () => {
+      activeWriterClass = k;
+      tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderUploadPanel();
+    };
+    tabs.appendChild(btn);
+  });
+  activeWriterClass = assigned[0] || 'kelas1';
+}
+
+async function loadWriterData() {
+  // Tidak perlu load semua — load saat panel dibuka
+  renderUploadPanel();
+}
+
+async function renderUploadPanel() {
+  const kelas = activeWriterClass;
+  const kelasNum = kelas.replace('kelas','');
+  document.getElementById('writer-panel-title').textContent = 'Upload Dokumen — Kelas ' + kelasNum;
+
+  // Deadline
+  const deadlines = appConfig ? appConfig.deadlines : {};
+  const dl = deadlines ? deadlines[kelas] : null;
+  renderDeadlineBadge(dl, 'writer-deadline-display');
+
+  // Lock check
+  const isGlobalLocked = appConfig && appConfig.submission_locked;
+  const isDeadlinePast = dl ? new Date() > new Date(dl) : false;
+  const isLocked = isGlobalLocked || isDeadlinePast;
+
+  const lockNotice = document.getElementById('writer-lock-notice');
+  lockNotice.style.display = isLocked ? 'block' : 'none';
+
+  // Load submissions
+  const grid = document.getElementById('upload-grid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-3)"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>';
+
+  let subs = {};
+  if (session.id) {
+    const { data } = await sb.from('submissions')
+      .select('*')
+      .eq('user_id', session.id)
+      .eq('kelas', kelas);
+    if (data) data.forEach(s => { subs[s.type] = s; });
+  }
+
+  grid.innerHTML = '';
+  TYPE_LIST.forEach(type => {
+    const sub   = subs[type] || { status: 'pending' };
+    const card  = buildUploadCard(type, sub, isLocked, kelas);
+    grid.appendChild(card);
+  });
+
+  setupDragDrop();
+}
+
+function buildUploadCard(type, sub, isLocked) {
+  const div = document.createElement('div');
+  const isDone = sub.status === 'uploaded' || sub.status === 'locked';
+  const isRevision = sub.status === 'revision_requested';
+
+  let cls = 'upload-card';
+  if (isDone)       cls += ' done';
+  if (isLocked)     cls += ' locked';
+  if (isRevision)   cls += ' late';
+
+  div.className = cls;
+  div.id = 'card-' + type;
+
+  if (sub.status === 'locked') {
+    div.innerHTML += '<div class="lock-label"><i class="fas fa-lock"></i> Terkunci</div>';
+  }
+
+  const iconColor = isDone ? 'var(--c-success)' : (isRevision ? 'var(--c-warning)' : 'var(--text-3)');
+  const iconClass = isDone ? 'fas fa-circle-check' : TYPE_ICON[type];
+
+  div.innerHTML += `
+    <div class="upload-icon"><i class="${iconClass}" style="color:${iconColor}"></i></div>
+    <h4>${TYPE_LABEL[type]}</h4>
+    <div class="upload-filename">${sub.file_name || 'Belum ada file'}</div>
+    <div style="margin-bottom:12px">${buildStatusBadge(sub.status)}</div>
+  `;
+
+  if (sub.uploaded_at) {
+    div.innerHTML += `<div class="upload-time"><i class="fas fa-clock" style="margin-right:4px"></i>${formatDate(sub.uploaded_at)}</div>`;
+  }
+
+  // Buttons
+  const btnWrap = document.createElement('div');
+  btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:12px';
+
+  if (!isLocked) {
+    const btnUpload = document.createElement('button');
+    btnUpload.className = 'btn btn-solid-primary btn-sm';
+    btnUpload.style.width = '100%';
+    btnUpload.innerHTML = `<i class="fas fa-upload"></i> ${isDone ? 'Ganti File' : 'Upload File'}`;
+    if (isDone) btnUpload.style.display = 'none'; // sembunyikan, pakai revisi
+
+    // Input file tersembunyi
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.id = 'inp-file-' + type;
+    inp.style.display = 'none';
+    inp.accept = '.doc,.docx,.pdf,.xls,.xlsx';
+    inp.onchange = () => processUpload(type, inp.files);
+    btnWrap.appendChild(inp);
+
+    if (!isDone) {
+      btnUpload.onclick = () => inp.click();
+      btnWrap.appendChild(btnUpload);
+      div.onclick = (e) => { if (!e.target.closest('button') && !isLocked) inp.click(); };
+    }
+
+    if (isDone && sub.status !== 'locked') {
+      const btnRevision = document.createElement('button');
+      btnRevision.className = 'btn btn-outline btn-sm';
+      btnRevision.style.cssText = 'width:100%;font-size:11px';
+      btnRevision.innerHTML = '<i class="fas fa-redo-alt"></i> Ajukan Revisi';
+      btnRevision.onclick = (e) => { e.stopPropagation(); openRevisionModal(activeWriterClass, type); };
+      btnWrap.appendChild(btnRevision);
+    }
+  }
+
+  if (sub.drive_url) {
+    const btnView = document.createElement('a');
+    btnView.href   = sub.drive_url;
+    btnView.target = '_blank';
+    btnView.className = 'btn btn-outline btn-sm';
+    btnView.style.cssText = 'width:100%;justify-content:center;font-size:11px;text-decoration:none';
+    btnView.innerHTML = '<i class="fas fa-external-link-alt"></i> Lihat di Drive';
+    btnWrap.appendChild(btnView);
+  }
+
+  div.appendChild(btnWrap);
+  return div;
+}
+
+function buildStatusBadge(status) {
+  const map = {
+    pending:           ['badge-pending',  '<i class="fas fa-circle" style="font-size:6px"></i> Pending'],
+    uploaded:          ['badge-uploaded', '<i class="fas fa-check"></i> Selesai'],
+    revision_requested:['badge-revision', '<i class="fas fa-clock"></i> Menunggu Persetujuan Revisi'],
+    revision_approved: ['badge-uploaded', '<i class="fas fa-check"></i> Revisi Disetujui'],
+    locked:            ['badge-locked',   '<i class="fas fa-lock"></i> Terkunci'],
+  };
+  const [cls, label] = map[status] || ['badge-pending','Tidak Diketahui'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ============================================================
+// FILE UPLOAD PROCESS
+// ============================================================
+async function processUpload(type, files) {
+  if (!files || !files[0]) return;
+  const file = files[0];
+
+  // Validasi
+  const allowed = ['.doc','.docx','.pdf','.xls','.xlsx'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!allowed.includes(ext)) {
+    toast('error', `Format tidak didukung. Gunakan: ${allowed.join(', ')}`);
+    return;
+  }
+  const maxMB = 10;
+  if (file.size > maxMB * 1024 * 1024) {
+    toast('error', `Ukuran file terlalu besar. Maksimal ${maxMB}MB.`);
+    return;
+  }
+
+  if (!GAS_URL) {
+    toast('error', 'URL GAS belum dikonfigurasi. Hubungi admin.');
+    return;
+  }
+
+  const links = appConfig ? appConfig.links : {};
+  const kelasLinks = links[activeWriterClass] || {};
+  const folderId = kelasLinks[type + '_folder'] || kelasLinks.folder || '';
+
+  if (!folderId) {
+    toast('error', 'Folder Drive untuk kelas ini belum dikonfigurasi admin.');
+    return;
+  }
+
+  const kelasNum  = activeWriterClass.replace('kelas','');
+  const cleanName = session.name.replace(/\s+/g,'_');
+  const filename  = `${cleanName}_Kelas${kelasNum}_${type.toUpperCase()}_SAT${ext}`;
+
+  showLoading(`Mengirim ${TYPE_LABEL[type]} ke Google Drive...`);
+
+  try {
+    // Baca file sebagai base64
+    const base64 = await fileToBase64(file);
+
+    // Kirim ke GAS
+    const gasRes = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action:   'uploadFile',
+        folderId: folderId,
+        filename: filename,
+        content:  base64,
+        mimeType: file.type || 'application/octet-stream'
+      })
+    });
+    const gasData = await gasRes.json();
+
+    if (!gasData.success) {
+      toast('error', 'Upload gagal: ' + gasData.message);
+      hideLoading();
+      return;
+    }
+
+    // Simpan metadata ke Supabase
+    const { data: subData, error: subErr } = await sb.rpc('upsert_submission', {
+      p_user_id:  session.id,
+      p_kelas:    activeWriterClass,
+      p_type:     type,
+      p_status:   'uploaded',
+      p_file_name: filename,
+      p_drive_url: gasData.fileUrl
+    });
+
+    if (subErr) throw subErr;
+
+    // Log
+    await sb.from('upload_logs').insert({
+      user_id:   session.id,
+      kelas:     activeWriterClass,
+      type:      type,
+      action:    'upload',
+      file_name: filename,
+      drive_url: gasData.fileUrl,
+      note:      'Upload via Portal SAT'
+    });
+
+    toast('success', `${TYPE_LABEL[type]} Kelas ${kelasNum} berhasil diupload!`);
+    hideLoading();
+    renderUploadPanel();
+
+  } catch (err) {
+    hideLoading();
+    toast('error', 'Terjadi kesalahan: ' + err.message);
+    console.error(err);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function setupDragDrop() {
+  TYPE_LIST.forEach(type => {
+    const card = document.getElementById('card-' + type);
+    if (!card || card.classList.contains('locked')) return;
+    ['dragover','dragleave','drop'].forEach(evt => card.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }));
+    card.addEventListener('dragover',  () => card.classList.add('drag-over'));
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+    card.addEventListener('drop', e => {
+      card.classList.remove('drag-over');
+      processUpload(type, e.dataTransfer.files);
+    });
+  });
+}
+
+// ============================================================
+// REVISION REQUEST (WRITER)
+// ============================================================
+function openRevisionModal(kelas, type) {
+  pendingRevisionPayload = { kelas, type };
+  document.getElementById('modal-revision-info').innerHTML =
+    `Kelas <strong>${kelas.replace('kelas','')}</strong> — <strong>${TYPE_LABEL[type]}</strong>`;
+  document.getElementById('inp-revision-reason').value = '';
+  openModal('modal-revision');
+}
+
+async function submitRevisionRequest() {
+  const reason = document.getElementById('inp-revision-reason').value.trim();
+  if (!reason) { toast('warn', 'Tulis alasan revisi terlebih dahulu.'); return; }
+  if (!pendingRevisionPayload) return;
+
+  const { kelas, type } = pendingRevisionPayload;
+
+  showLoading('Mengajukan permintaan revisi...');
+  try {
+    const { error } = await sb.from('revision_requests').insert({
+      user_id: session.id,
+      kelas:   kelas,
+      type:    type,
+      reason:  reason,
+      status:  'pending'
+    });
+    if (error) throw error;
+
+    // Update status submission
+    await sb.from('submissions')
+      .update({ status: 'revision_requested', updated_at: new Date().toISOString() })
+      .eq('user_id', session.id)
+      .eq('kelas', kelas)
+      .eq('type', type);
+
+    await sb.from('upload_logs').insert({
+      user_id: session.id, kelas, type, action: 'revision_request',
+      note: reason
+    });
+
+    hideLoading();
+    closeModal('modal-revision');
+    toast('info', 'Permintaan revisi berhasil diajukan. Tunggu persetujuan admin.');
+    renderUploadPanel();
+  } catch (err) {
+    hideLoading();
+    toast('error', 'Gagal: ' + err.message);
+  }
+}
+
+// ============================================================
+// WRITER HISTORY
+// ============================================================
+async function loadWriterHistory() {
+  const tbody = document.getElementById('tbody-writer-history');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
+
+  const { data, error } = await sb.from('upload_logs')
+    .select('*')
+    .eq('user_id', session.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error || !data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-3)">Belum ada riwayat upload.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  data.forEach(log => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-size:12px">${formatDate(log.created_at)}</td>
+      <td>Kelas ${log.kelas.replace('kelas','')}</td>
+      <td>${TYPE_LABEL[log.type] || log.type}</td>
+      <td><span class="badge ${actionBadgeClass(log.action)}">${actionLabel(log.action)}</span></td>
+      <td style="font-size:12px">
+        ${log.file_name || '—'}
+        ${log.drive_url ? `<a href="${log.drive_url}" target="_blank" style="margin-left:6px;color:var(--c-primary)"><i class="fas fa-external-link-alt"></i></a>` : ''}
+        ${log.note ? `<div style="color:var(--text-3);font-size:11px;margin-top:2px">${log.note}</div>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function actionLabel(action) {
+  const map = { upload: 'Upload', revision_request: 'Ajuan Revisi', revision_approved: 'Revisi Disetujui', revision_rejected: 'Revisi Ditolak', reset: 'Reset', locked: 'Dikunci', unlocked: 'Dibuka' };
+  return map[action] || action;
+}
+function actionBadgeClass(action) {
+  if (action === 'upload') return 'badge-uploaded';
+  if (action.includes('reject')) return 'badge-late';
+  if (action.includes('approv')) return 'badge-uploaded';
+  if (action === 'locked') return 'badge-locked';
+  return 'badge-pending';
+}
+
+// ============================================================
+// WRITER ACCOUNT
+// ============================================================
+async function updateSelfPass() {
+  const p1 = document.getElementById('inp-new-pass').value;
+  const p2 = document.getElementById('inp-confirm-pass').value;
+  if (p1.length < 4)   { toast('warn', 'Password minimal 4 karakter.'); return; }
+  if (p1 !== p2)        { toast('warn', 'Konfirmasi password tidak cocok.'); return; }
+
+  showLoading('Memperbarui password...');
+  const { error } = await sb.from('users').update({ password: p1 }).eq('id', session.id);
+  hideLoading();
+  if (error) { toast('error', 'Gagal update password.'); return; }
+  session.password = p1;
+  sessionStorage.setItem('sat_session', JSON.stringify(session));
+  toast('success', 'Password berhasil diperbarui.');
+  document.getElementById('inp-new-pass').value   = '';
+  document.getElementById('inp-confirm-pass').value = '';
+}
+
+// ============================================================
+// ADMIN — LOAD DATA
+// ============================================================
+async function loadAdminData() {
+  showLoading('Memuat data admin...');
+  try {
+    const [usersRes, subsRes, revRes] = await Promise.all([
+      sb.from('users').select('*').order('name'),
+      sb.from('submissions').select('*'),
+      sb.from('revision_requests').select('*').eq('status','pending')
+    ]);
+    allUsers = usersRes.data || [];
+    allSubs  = subsRes.data  || [];
+
+    // Badge revisi
+    const pendingRev = revRes.data ? revRes.data.length : 0;
+    const badge = document.getElementById('badge-revision');
+    if (pendingRev > 0) {
+      badge.style.display = 'inline-flex';
+      badge.textContent = pendingRev;
+    } else {
+      badge.style.display = 'none';
+    }
+
+  } catch (err) {
+    toast('error', 'Gagal memuat data: ' + err.message);
+  }
+  hideLoading();
+  renderOverview();
+  buildAdminClassTabs();
+}
+
+function buildAdminClassTabs() {
+  const tabs = document.getElementById('admin-class-tabs');
+  if (!tabs) return;
+  tabs.innerHTML = '';
+  KELAS_LIST.forEach((k, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = 'Kelas ' + k.replace('kelas','');
+    btn.onclick = () => {
+      activeAdminClass = k;
+      tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderProgressTable();
+    };
+    tabs.appendChild(btn);
+  });
+  activeAdminClass = 'kelas1';
+}
+
+// ============================================================
+// ADMIN OVERVIEW
+// ============================================================
+function renderOverview() {
+  // Stats
+  const totalSlots  = allUsers.length * 3 * 5;
+  const totalDone   = allSubs.filter(s => s.status === 'uploaded' || s.status === 'locked').length;
+  const pct         = totalSlots > 0 ? Math.round((totalDone / totalSlots) * 100) : 0;
+  const doneWriters = allUsers.filter(u => {
+    const userSubs = allSubs.filter(s => s.user_id === u.id);
+    return userSubs.filter(s => s.status === 'uploaded' || s.status === 'locked').length >= (u.assigned_classes || KELAS_LIST).length * 3;
+  }).length;
+
+  document.getElementById('overview-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Penulis</div>
+      <div class="stat-value">${allUsers.length}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Berkas Terkumpul</div>
+      <div class="stat-value">${totalDone}</div>
+      <div class="stat-sub">dari ${totalSlots} total slot</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Progres Keseluruhan</div>
+      <div class="stat-value">${pct}%</div>
+      <div class="stat-sub" style="margin-top:6px">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill ${pct>= 80?'good':pct>=40?'medium':''}" style="width:${pct}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Penulis Lengkap</div>
+      <div class="stat-value">${doneWriters}</div>
+      <div class="stat-sub">dari ${allUsers.length} penulis</div>
+    </div>
+  `;
+
+  // Class summary
+  const classSummary = document.getElementById('class-summary-grid');
+  classSummary.innerHTML = '';
+  KELAS_LIST.forEach(k => {
+    const klsSubs  = allSubs.filter(s => s.kelas === k && (s.status === 'uploaded' || s.status === 'locked'));
+    const klsTotal = allUsers.filter(u => (u.assigned_classes||KELAS_LIST).includes(k)).length * 3;
+    const klsPct   = klsTotal > 0 ? Math.round((klsSubs.length / klsTotal) * 100) : 0;
+    const card     = document.createElement('div');
+    card.className = 'class-summary-card';
+    card.innerHTML = `
+      <div class="class-num">${k.replace('kelas','')}</div>
+      <div class="class-label">Kelas ${k.replace('kelas','')}</div>
+      <div class="class-pct">${klsPct}%</div>
+      <div style="margin-top:6px"><div class="progress-bar-wrap"><div class="progress-bar-fill ${klsPct>=80?'good':klsPct>=40?'medium':''}" style="width:${klsPct}%"></div></div></div>
+    `;
+    card.onclick = () => {
+      activeAdminClass = k;
+      switchView('admin-progress');
+    };
+    classSummary.appendChild(card);
+  });
+
+  // Progress bars
+  const bars = document.getElementById('overview-progress-bars');
+  bars.innerHTML = '';
+  KELAS_LIST.forEach(k => {
+    const klsSubs  = allSubs.filter(s => s.kelas === k && (s.status === 'uploaded' || s.status === 'locked'));
+    const klsTotal = allUsers.filter(u => (u.assigned_classes||KELAS_LIST).includes(k)).length * 3;
+    const klsPct   = klsTotal > 0 ? Math.round((klsSubs.length / klsTotal) * 100) : 0;
+    bars.innerHTML += `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:13px;font-weight:600;color:var(--text-1)">Kelas ${k.replace('kelas','')}</span>
+          <span style="font-size:12px;color:var(--text-3)">${klsSubs.length} / ${klsTotal} (${klsPct}%)</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill ${klsPct>=80?'good':klsPct>=40?'medium':''}" style="width:${klsPct}%"></div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ============================================================
+// ADMIN PROGRESS TABLE
+// ============================================================
+function renderProgressTable() {
+  const kelas    = activeAdminClass;
+  const kelasNum = kelas.replace('kelas','');
+  document.getElementById('progress-table-title').textContent = 'Progres Kelas ' + kelasNum;
+
+  const relevant = allUsers.filter(u => (u.assigned_classes || KELAS_LIST).includes(kelas));
+  const klsSubs  = allSubs.filter(s => s.kelas === kelas);
+
+  const done    = klsSubs.filter(s => s.status === 'uploaded' || s.status === 'locked').length;
+  const total   = relevant.length * 3;
+  const pct     = total > 0 ? Math.round((done/total)*100) : 0;
+
+  document.getElementById('progress-overall-badge').innerHTML =
+    `<span class="badge ${pct>=100?'badge-uploaded':pct>=50?'badge-revision':'badge-pending'}">${pct}% (${done}/${total})</span>`;
+
+  const links  = appConfig ? appConfig.links : {};
+  const klsLinks = links[kelas] || {};
+  const tbody  = document.getElementById('tbody-admin-progress');
+  tbody.innerHTML = '';
+
+  relevant.forEach(user => {
+    const userSubs = {};
+    klsSubs.filter(s => s.user_id === user.id).forEach(s => { userSubs[s.type] = s; });
+
+    const renderCell = (type) => {
+      const sub = userSubs[type];
+      const st  = sub ? sub.status : 'pending';
+      const badge = buildStatusBadge(st);
+      const resetBtn = (st !== 'pending')
+        ? `<button class="btn-ghost btn-sm no-print" onclick="adminResetTask('${user.id}','${kelas}','${type}')" title="Reset ke pending"><i class="fas fa-undo" style="font-size:11px"></i></button>`
+        : '';
+      const lockBtn = (st === 'uploaded')
+        ? `<button class="btn-ghost btn-sm no-print" onclick="adminLockTask('${user.id}','${kelas}','${type}')" title="Kunci"><i class="fas fa-lock" style="font-size:11px"></i></button>`
+        : '';
+      const unlockBtn = (st === 'locked')
+        ? `<button class="btn-ghost btn-sm no-print" onclick="adminUnlockTask('${user.id}','${kelas}','${type}')" title="Buka kunci"><i class="fas fa-lock-open" style="font-size:11px"></i></button>`
+        : '';
+      return `<td style="text-align:center">${badge}<div style="margin-top:4px">${resetBtn}${lockBtn}${unlockBtn}</div></td>`;
+    };
+
+    const driveLinks = `
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${klsLinks.kartu  ? `<a href="${klsLinks.kartu}"  target="_blank" class="btn btn-outline btn-sm no-print" title="Folder Kartu"><i class="fas fa-file-word"></i></a>` : ''}
+        ${klsLinks.kisi   ? `<a href="${klsLinks.kisi}"   target="_blank" class="btn btn-outline btn-sm no-print" title="Folder Kisi"><i class="fas fa-list-check"></i></a>` : ''}
+        ${klsLinks.naskah ? `<a href="${klsLinks.naskah}" target="_blank" class="btn btn-outline btn-sm no-print" title="Folder Naskah"><i class="fas fa-file-lines"></i></a>` : ''}
+        ${klsLinks.folder ? `<a href="${klsLinks.folder}" target="_blank" class="btn btn-outline btn-sm no-print" title="Semua Folder"><i class="fas fa-folder"></i></a>` : ''}
+      </div>
+    `;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="cell-name">${user.name}</div>
+        <div class="cell-sub">${user.username}</div>
+      </td>
+      ${renderCell('kartu')}
+      ${renderCell('kisi')}
+      ${renderCell('naskah')}
+      <td>${driveLinks}</td>
+      <td class="no-print">
+        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${user.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (relevant.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-3)">Tidak ada penulis yang ditugaskan untuk kelas ini.</td></tr>`;
+  }
+
+  // Update active tab
+  document.querySelectorAll('#admin-class-tabs .tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', KELAS_LIST[i] === kelas);
+  });
+}
+
+// ============================================================
+// ADMIN TASK ACTIONS
+// ============================================================
+async function adminResetTask(userId, kelas, type) {
+  if (!confirm(`Reset status ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')} menjadi Pending?`)) return;
+  showLoading('Mereset status...');
+  const { error } = await sb.from('submissions')
+    .update({ status: 'pending', updated_at: new Date().toISOString() })
+    .eq('user_id', userId).eq('kelas', kelas).eq('type', type);
+  await sb.from('upload_logs').insert({ user_id: userId, kelas, type, action: 'reset', note: 'Admin reset' });
+  hideLoading();
+  if (error) { toast('error', 'Gagal reset.'); return; }
+  allSubs = allSubs.map(s => s.user_id === userId && s.kelas === kelas && s.type === type ? { ...s, status: 'pending' } : s);
+  toast('success', 'Status direset ke Pending.');
+  renderProgressTable();
+}
+
+async function adminLockTask(userId, kelas, type) {
+  if (!confirm(`Kunci berkas ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')}? Penulis tidak bisa upload ulang.`)) return;
+  showLoading('Mengunci...');
+  const { error } = await sb.from('submissions')
+    .update({ status: 'locked', locked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('user_id', userId).eq('kelas', kelas).eq('type', type);
+  await sb.from('upload_logs').insert({ user_id: userId, kelas, type, action: 'locked', note: 'Admin kunci' });
+
+  // Notif WA ke penulis
+  const user = allUsers.find(u => u.id === userId);
+  if (user && user.phone && appConfig && appConfig.fonnte_token && GAS_URL) {
+    const msg = `[Portal SAT] Berkas ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')} Anda telah dikunci oleh admin. Tidak ada perubahan lebih lanjut yang diperlukan.`;
+    sendWANotif(user.phone, msg);
+  }
+
+  hideLoading();
+  if (error) { toast('error', 'Gagal mengunci.'); return; }
+  allSubs = allSubs.map(s => s.user_id === userId && s.kelas === kelas && s.type === type ? { ...s, status: 'locked' } : s);
+  toast('success', 'Berkas dikunci.');
+  renderProgressTable();
+}
+
+async function adminUnlockTask(userId, kelas, type) {
+  if (!confirm(`Buka kunci ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')}? Penulis bisa upload ulang.`)) return;
+  showLoading('Membuka kunci...');
+  const { error } = await sb.from('submissions')
+    .update({ status: 'uploaded', locked_at: null, updated_at: new Date().toISOString() })
+    .eq('user_id', userId).eq('kelas', kelas).eq('type', type);
+  await sb.from('upload_logs').insert({ user_id: userId, kelas, type, action: 'unlocked', note: 'Admin buka kunci' });
+
+  // Notif WA ke penulis — ini yang diminta: notif saat lock di-release
+  const user = allUsers.find(u => u.id === userId);
+  if (user && user.phone && appConfig && appConfig.fonnte_token && GAS_URL) {
+    const msg = `[Portal SAT] Berkas ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')} Anda telah dibuka kembali oleh admin. Silakan upload file terbaru melalui Portal SAT.`;
+    sendWANotif(user.phone, msg);
+  }
+
+  hideLoading();
+  if (error) { toast('error', 'Gagal membuka kunci.'); return; }
+  allSubs = allSubs.map(s => s.user_id === userId && s.kelas === kelas && s.type === type ? { ...s, status: 'uploaded' } : s);
+  toast('info', 'Kunci dibuka. Notif WA dikirim ke penulis.');
+  renderProgressTable();
+}
+
+// ============================================================
+// ADMIN REVISIONS
+// ============================================================
+async function loadRevisions() {
+  const container = document.getElementById('revisions-container');
+  container.innerHTML = '<div style="text-align:center;padding:20px"><i class="fas fa-spinner fa-spin"></i></div>';
+
+  const { data, error } = await sb.from('revision_requests')
+    .select('*, users(name, username, phone)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-3)">Tidak ada permintaan revisi.</div>';
+    document.getElementById('revision-count-label').textContent = '0 pending';
+    return;
+  }
+
+  const pending = data.filter(r => r.status === 'pending').length;
+  document.getElementById('revision-count-label').textContent = `${pending} pending`;
+
+  container.innerHTML = '';
+  data.forEach(rev => {
+    const card = document.createElement('div');
+    card.className = 'revision-card';
+    const statusMap = { pending: 'badge-revision', approved: 'badge-uploaded', rejected: 'badge-late' };
+    card.innerHTML = `
+      <div class="rev-header">
+        <div>
+          <strong style="font-size:14px">${rev.users?.name || '—'}</strong>
+          <span class="badge ${statusMap[rev.status]}" style="margin-left:8px">${rev.status}</span>
+        </div>
+        <div class="rev-meta">${formatDate(rev.created_at)}</div>
+      </div>
+      <div class="rev-meta">Kelas ${rev.kelas.replace('kelas','')} — ${TYPE_LABEL[rev.type]}</div>
+      <div class="rev-reason">${rev.reason}</div>
+      ${rev.status === 'pending' ? `
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-solid-success btn-sm" onclick="approveRevision('${rev.id}','${rev.user_id}','${rev.kelas}','${rev.type}')">
+            <i class="fas fa-check"></i> Setujui
+          </button>
+          <button class="btn btn-solid-danger btn-sm" onclick="rejectRevision('${rev.id}','${rev.user_id}','${rev.kelas}','${rev.type}')">
+            <i class="fas fa-times"></i> Tolak
+          </button>
+        </div>
+      ` : `<div class="rev-meta" style="margin-top:6px">${rev.admin_note || ''}</div>`}
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function approveRevision(revId, userId, kelas, type) {
+  showLoading('Menyetujui revisi...');
+  await sb.from('revision_requests').update({ status: 'approved', resolved_at: new Date().toISOString(), admin_note: 'Disetujui admin.' }).eq('id', revId);
+  await sb.from('submissions').update({ status: 'pending', updated_at: new Date().toISOString() }).eq('user_id', userId).eq('kelas', kelas).eq('type', type);
+  await sb.from('upload_logs').insert({ user_id: userId, kelas, type, action: 'revision_approved', note: 'Admin setujui revisi' });
+
+  // Notif WA
+  const user = allUsers.find(u => u.id === userId);
+  if (user && user.phone && appConfig && appConfig.fonnte_token && GAS_URL) {
+    const msg = `[Portal SAT] Permintaan revisi ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')} Anda telah DISETUJUI. Silakan upload file baru melalui portal.`;
+    sendWANotif(user.phone, msg);
+  }
+
+  hideLoading();
+  toast('success', 'Revisi disetujui. Slot upload dibuka kembali.');
+  loadRevisions();
+}
+
+async function rejectRevision(revId, userId, kelas, type) {
+  const note = prompt('Alasan penolakan (opsional):') || 'Ditolak admin.';
+  showLoading('Menolak revisi...');
+  await sb.from('revision_requests').update({ status: 'rejected', resolved_at: new Date().toISOString(), admin_note: note }).eq('id', revId);
+  await sb.from('submissions').update({ status: 'uploaded', updated_at: new Date().toISOString() }).eq('user_id', userId).eq('kelas', kelas).eq('type', type);
+  await sb.from('upload_logs').insert({ user_id: userId, kelas, type, action: 'revision_rejected', note });
+
+  const user = allUsers.find(u => u.id === userId);
+  if (user && user.phone && appConfig && appConfig.fonnte_token && GAS_URL) {
+    const msg = `[Portal SAT] Permintaan revisi ${TYPE_LABEL[type]} Kelas ${kelas.replace('kelas','')} Anda DITOLAK. Alasan: ${note}`;
+    sendWANotif(user.phone, msg);
+  }
+
+  hideLoading();
+  toast('info', 'Revisi ditolak.');
+  loadRevisions();
+}
+
+// ============================================================
+// ADMIN USERS
+// ============================================================
+function renderUsersTable() {
+  const query  = document.getElementById('search-users').value.toLowerCase();
+  const tbody  = document.getElementById('tbody-users');
+  tbody.innerHTML = '';
+
+  const filtered = allUsers.filter(u =>
+    u.name.toLowerCase().includes(query) || u.username.toLowerCase().includes(query)
+  );
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-3)">Tidak ada data.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(user => {
+    const assigned = (user.assigned_classes || KELAS_LIST).map(k => 'K'+k.replace('kelas','')).join(', ');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="cell-name">${user.name}</div></td>
+      <td style="font-family:monospace;font-size:12px">${user.username}</td>
+      <td style="font-size:12px">${user.phone || '—'}</td>
+      <td><span class="badge badge-pending" style="font-size:10px">${assigned}</span></td>
+      <td><span class="badge ${user.is_active ? 'badge-uploaded' : 'badge-late'}">${user.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="openEditUser('${user.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteUser('${user.id}')" title="Hapus" style="color:var(--c-danger)"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function saveNewUser() {
+  const name     = document.getElementById('add-name').value.trim();
+  const username = document.getElementById('add-username').value.trim();
+  const password = document.getElementById('add-password').value.trim();
+  const phone    = document.getElementById('add-phone').value.trim();
+  const classes  = [...document.querySelectorAll('#add-classes input:checked')].map(c => c.value);
+
+  if (!name || !username || !password) { toast('warn', 'Lengkapi semua field wajib.'); return; }
+  if (allUsers.find(u => u.username === username)) { toast('warn', 'Username sudah digunakan.'); return; }
+  if (classes.length === 0) { toast('warn', 'Pilih minimal satu kelas.'); return; }
+
+  showLoading('Menyimpan penulis...');
+  const { data, error } = await sb.from('users').insert({
+    name, username, password, phone: phone || null, assigned_classes: classes
+  }).select().single();
+  hideLoading();
+
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
+  allUsers.push(data);
+  closeModal('modal-add-user');
+  toast('success', 'Penulis berhasil ditambahkan.');
+  renderUsersTable();
+}
+
+function openEditUser(id) {
+  const user = allUsers.find(u => u.id === id);
+  if (!user) return;
+  document.getElementById('edit-user-id').value  = id;
+  document.getElementById('edit-name').value     = user.name;
+  document.getElementById('edit-username').value = user.username;
+  document.getElementById('edit-password').value = '';
+  document.getElementById('edit-phone').value    = user.phone || '';
+  ['k1','k2','k3','k4','k5'].forEach((k,i) => {
+    document.getElementById('edit-' + k).checked = (user.assigned_classes||KELAS_LIST).includes('kelas'+(i+1));
+  });
+  openModal('modal-edit-user');
+}
+
+async function saveEditUser() {
+  const id       = document.getElementById('edit-user-id').value;
+  const name     = document.getElementById('edit-name').value.trim();
+  const username = document.getElementById('edit-username').value.trim();
+  const password = document.getElementById('edit-password').value.trim();
+  const phone    = document.getElementById('edit-phone').value.trim();
+  const classes  = ['k1','k2','k3','k4','k5'].filter(k => document.getElementById('edit-'+k).checked).map((_,i) => 'kelas'+(i+1));
+
+  const updates = { name, username, phone: phone||null, assigned_classes: classes };
+  if (password.length >= 4) updates.password = password;
+
+  showLoading('Menyimpan...');
+  const { error } = await sb.from('users').update(updates).eq('id', id);
+  hideLoading();
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
+
+  const idx = allUsers.findIndex(u => u.id === id);
+  if (idx !== -1) allUsers[idx] = { ...allUsers[idx], ...updates };
+
+  closeModal('modal-edit-user');
+  toast('success', 'Data penulis diperbarui.');
+  renderUsersTable();
+}
+
+async function deleteUser(id) {
+  const user = allUsers.find(u => u.id === id);
+  if (!user) return;
+  if (!confirm(`Hapus akun "${user.name}"? Semua data progress akan ikut terhapus.`)) return;
+  showLoading('Menghapus...');
+  const { error } = await sb.from('users').delete().eq('id', id);
+  hideLoading();
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
+  allUsers = allUsers.filter(u => u.id !== id);
+  allSubs  = allSubs.filter(s => s.user_id !== id);
+  toast('success', 'Akun dihapus.');
+  renderUsersTable();
+}
+
+function downloadBulkTemplate() {
+  const csv = 'Nama Sekolah;Username;Password;No WA\nSDN Contoh 01;sdn_contoh_01;pass123;081234567890\n';
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'template_penulis_sat.csv';
+  a.click();
+}
+
+async function processBulkUpload(files) {
+  if (!files[0]) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const lines = e.target.result.split('\n');
+    let count = 0;
+    const toInsert = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const cols = line.includes(';') ? line.split(';') : line.split(',');
+      const name = cols[0]?.trim(), user = cols[1]?.trim(), pass = cols[2]?.trim(), phone = cols[3]?.trim() || null;
+      if (!name || !user || !pass) continue;
+      if (allUsers.find(u => u.username === user)) continue;
+      toInsert.push({ name, username: user, password: pass, phone, assigned_classes: KELAS_LIST });
+      count++;
+    }
+    if (count === 0) { toast('warn', 'Tidak ada data baru untuk diimport.'); return; }
+    showLoading(`Mengimport ${count} akun...`);
+    const { data, error } = await sb.from('users').insert(toInsert).select();
+    hideLoading();
+    if (error) { toast('error', 'Gagal import: ' + error.message); return; }
+    allUsers = [...allUsers, ...data];
+    renderUsersTable();
+    toast('success', `${count} akun berhasil diimport.`);
+  };
+  reader.readAsText(files[0]);
+}
+
+// ============================================================
+// ADMIN CONFIG
+// ============================================================
+function loadConfigForm() {
+  if (!appConfig) return;
+  document.getElementById('conf-gas-url').value   = GAS_URL;
+  document.getElementById('conf-fonnte-token').value = appConfig.fonnte_token || '';
+  document.getElementById('conf-link-tugas').value   = appConfig.link_tugas || '';
+  document.getElementById('tog-show-drive').className = 'toggle' + (appConfig.show_drive_to_writers ? ' on' : '');
+
+  buildConfClassTabs();
+  buildDeadlineInputs();
+}
+
+function buildConfClassTabs() {
+  const tabs = document.getElementById('conf-class-tabs');
+  tabs.innerHTML = '';
+  KELAS_LIST.forEach((k, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = 'Kelas ' + k.replace('kelas','');
+    btn.onclick = () => {
+      activeConfClass = k;
+      tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderConfFields();
+    };
+    tabs.appendChild(btn);
+  });
+  activeConfClass = 'kelas1';
+  renderConfFields();
+}
+
+function renderConfFields() {
+  const k   = activeConfClass;
+  const lnk = appConfig && appConfig.links ? (appConfig.links[k] || {}) : {};
+  document.getElementById('conf-class-fields').innerHTML = `
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Folder ID — Kartu Soal</label>
+        <input type="text" id="conf-kartu-folder" class="form-control" value="${lnk.kartu_folder||''}" placeholder="ID folder Google Drive">
+        <div class="form-hint">Folder tempat file Kartu Soal disimpan</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link Folder — Kartu Soal (untuk admin)</label>
+        <input type="text" id="conf-kartu-link" class="form-control" value="${lnk.kartu||''}" placeholder="https://drive.google.com/...">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Folder ID — Kisi-kisi</label>
+        <input type="text" id="conf-kisi-folder" class="form-control" value="${lnk.kisi_folder||''}" placeholder="ID folder Google Drive">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link Folder — Kisi-kisi (untuk admin)</label>
+        <input type="text" id="conf-kisi-link" class="form-control" value="${lnk.kisi||''}" placeholder="https://drive.google.com/...">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Folder ID — Naskah Soal</label>
+        <input type="text" id="conf-naskah-folder" class="form-control" value="${lnk.naskah_folder||''}" placeholder="ID folder Google Drive">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link Folder — Naskah Soal (untuk admin)</label>
+        <input type="text" id="conf-naskah-link" class="form-control" value="${lnk.naskah||''}" placeholder="https://drive.google.com/...">
+      </div>
+    </div>
+  `;
+}
+
+function buildDeadlineInputs() {
+  const dls = appConfig ? appConfig.deadlines : {};
+  const wrap = document.getElementById('deadline-inputs');
+  wrap.innerHTML = '';
+  KELAS_LIST.forEach(k => {
+    const val = dls && dls[k] ? dls[k].slice(0,16) : '';
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    div.innerHTML = `
+      <label class="form-label">Kelas ${k.replace('kelas','')}</label>
+      <input type="datetime-local" id="dl-${k}" class="form-control" value="${val}">
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+async function saveDriveConfig() {
+  const k = activeConfClass;
+  const updates = {
+    kartu_folder:  document.getElementById('conf-kartu-folder').value.trim(),
+    kartu:         document.getElementById('conf-kartu-link').value.trim(),
+    kisi_folder:   document.getElementById('conf-kisi-folder').value.trim(),
+    kisi:          document.getElementById('conf-kisi-link').value.trim(),
+    naskah_folder: document.getElementById('conf-naskah-folder').value.trim(),
+    naskah:        document.getElementById('conf-naskah-link').value.trim(),
+  };
+
+  const newLinks = { ...(appConfig.links || {}), [k]: { ...(appConfig.links?.[k] || {}), ...updates } };
+  showLoading('Menyimpan konfigurasi Drive...');
+  const { error } = await sb.from('config').update({ links: newLinks, updated_at: new Date().toISOString() }).eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
+  appConfig.links = newLinks;
+  toast('success', 'Konfigurasi Drive disimpan.');
+}
+
+async function pingDriveFolder() {
+  const fid = document.getElementById('conf-kartu-folder').value.trim();
+  if (!fid) { toast('warn', 'Masukkan Folder ID terlebih dahulu.'); return; }
+  if (!GAS_URL) { toast('warn', 'Simpan URL GAS dulu.'); return; }
+  showLoading('Mengecek folder...');
+  try {
+    const res  = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'pingDrive', folderId: fid }) });
+    const data = await res.json();
+    hideLoading();
+    if (data.success) toast('success', 'Folder ditemukan: ' + data.folderName);
+    else              toast('error', data.message);
+  } catch (e) {
+    hideLoading();
+    toast('error', 'Koneksi GAS gagal.');
+  }
+}
+
+async function saveDeadlines() {
+  const deadlines = {};
+  KELAS_LIST.forEach(k => {
+    const val = document.getElementById('dl-' + k).value;
+    deadlines[k] = val ? new Date(val).toISOString() : null;
+  });
+  showLoading('Menyimpan deadline...');
+  const { error } = await sb.from('config').update({ deadlines, updated_at: new Date().toISOString() }).eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
+  appConfig.deadlines = deadlines;
+  toast('success', 'Deadline disimpan.');
+}
+
+async function saveFonnteConfig() {
+  const token = document.getElementById('conf-fonnte-token').value.trim();
+  showLoading('Menyimpan token...');
+  const { error } = await sb.from('config').update({ fonnte_token: token, updated_at: new Date().toISOString() }).eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal.'); return; }
+  appConfig.fonnte_token = token;
+  toast('success', 'Token Fonnte disimpan.');
+}
+
+async function testWaNotif() {
+  const token = appConfig?.fonnte_token;
+  if (!token) { toast('warn', 'Token Fonnte belum disimpan.'); return; }
+  const target = prompt('Masukkan nomor WA untuk test (format: 08xxxxxxxxxx):');
+  if (!target) return;
+  showLoading('Mengirim test WA...');
+  const ok = await sendWANotif(target, '[Portal SAT] Test notifikasi berhasil! Sistem WA aktif.');
+  hideLoading();
+  if (ok) toast('success', 'WA terkirim ke ' + target);
+  else    toast('error', 'WA gagal terkirim. Cek token & nomor.');
+}
+
+async function saveVisibilityConfig() {
+  const showDrive = document.getElementById('tog-show-drive').classList.contains('on');
+  const linkTugas = document.getElementById('conf-link-tugas').value.trim();
+  showLoading('Menyimpan...');
+  const { error } = await sb.from('config').update({ show_drive_to_writers: showDrive, link_tugas: linkTugas, updated_at: new Date().toISOString() }).eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal.'); return; }
+  appConfig.show_drive_to_writers = showDrive;
+  appConfig.link_tugas = linkTugas;
+  toast('success', 'Konfigurasi visibilitas disimpan.');
+}
+
+async function testGasUrl() {
+  const url = document.getElementById('conf-gas-url').value.trim();
+  if (!url) { toast('warn', 'Masukkan URL GAS terlebih dahulu.'); return; }
+  showLoading('Mengecek GAS...');
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    hideLoading();
+    if (data.status === 'ok') {
+      GAS_URL = url;
+      localStorage.setItem('sat_gas_url', url);
+      toast('success', 'GAS terhubung! ' + data.message);
+    } else {
+      toast('warn', 'GAS merespons tapi format tidak dikenal.');
+    }
+  } catch (e) {
+    hideLoading();
+    toast('error', 'Gagal terhubung ke GAS. Cek URL & deploy setting.');
+  }
+}
+
+async function updateAdminPass() {
+  const p = document.getElementById('conf-admin-pass').value.trim();
+  if (p.length < 4) { toast('warn', 'Min. 4 karakter.'); return; }
+  showLoading('Memperbarui...');
+  const { error } = await sb.from('config').update({ admin_password: p, updated_at: new Date().toISOString() }).eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal.'); return; }
+  appConfig.admin_password = p;
+  document.getElementById('conf-admin-pass').value = '';
+  toast('success', 'Password admin diperbarui.');
+}
+
+// ============================================================
+// ADMIN BROADCAST
+// ============================================================
+function loadBroadcastForm() {
+  if (!appConfig) return;
+  document.getElementById('inp-announcement').value = appConfig.announcement || '';
+  document.getElementById('tog-announcement').className = 'toggle' + (appConfig.announcement_active ? ' on' : '');
+}
+
+async function saveAnnouncement() {
+  const text   = document.getElementById('inp-announcement').value.trim();
+  const active = document.getElementById('tog-announcement').classList.contains('on');
+  showLoading('Menyimpan pengumuman...');
+  const { error } = await sb.from('config').update({ announcement: text, announcement_active: active, updated_at: new Date().toISOString() }).eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal.'); return; }
+  appConfig.announcement        = text;
+  appConfig.announcement_active = active;
+  toast('success', 'Pengumuman diperbarui. Penulis akan melihat saat login.');
+}
+
+async function sendBulkWAReminder() {
+  const token = appConfig?.fonnte_token;
+  if (!token) { toast('warn', 'Token Fonnte belum dikonfigurasi di menu Konfigurasi.'); return; }
+  if (!GAS_URL) { toast('warn', 'URL GAS belum dikonfigurasi.'); return; }
+
+  const targetKelas  = document.getElementById('wa-reminder-kelas').value;
+  const filter       = document.getElementById('wa-reminder-filter').value;
+  const msgTemplate  = document.getElementById('wa-reminder-msg').value;
+
+  // Tentukan target users
+  let targets = allUsers.filter(u => u.phone);
+  if (targetKelas !== 'all') {
+    targets = targets.filter(u => (u.assigned_classes||KELAS_LIST).includes(targetKelas));
+  }
+  if (filter === 'pending') {
+    targets = targets.filter(u => {
+      const klasses = targetKelas === 'all' ? (u.assigned_classes||KELAS_LIST) : [targetKelas];
+      return klasses.some(k => {
+        const userSubs = allSubs.filter(s => s.user_id === u.id && s.kelas === k);
+        return userSubs.length < 3 || userSubs.some(s => s.status === 'pending');
+      });
+    });
+  }
+
+  if (targets.length === 0) { toast('warn', 'Tidak ada target yang sesuai filter.'); return; }
+
+  if (!confirm(`Kirim WA ke ${targets.length} penulis?`)) return;
+
+  showLoading(`Mengirim reminder ke ${targets.length} nomor...`);
+  let sent = 0;
+  const deadlines = appConfig?.deadlines || {};
+
+  for (const user of targets) {
+    const kelas = targetKelas === 'all' ? 'semua kelas' : 'Kelas ' + targetKelas.replace('kelas','');
+    const dl    = targetKelas !== 'all' && deadlines[targetKelas] ? formatDate(deadlines[targetKelas]) : '—';
+    const msg   = msgTemplate
+      .replace('{nama}', user.name)
+      .replace('{kelas}', kelas)
+      .replace('{deadline}', dl);
+    const ok = await sendWANotif(user.phone, msg);
+    if (ok) sent++;
+    await sleep(500); // delay antar kiriman agar tidak rate-limit
+  }
+
+  hideLoading();
+  toast('success', `Reminder terkirim ke ${sent} dari ${targets.length} nomor.`);
+}
+
+// ============================================================
+// WA NOTIF
+// ============================================================
+async function sendWANotif(phone, message) {
+  if (!GAS_URL || !appConfig?.fonnte_token) return false;
+  try {
+    const res  = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'sendWA', token: appConfig.fonnte_token, target: phone, message })
+    });
+    const data = await res.json();
+    return data.success;
+  } catch { return false; }
+}
+
+// ============================================================
+// DEADLINE HELPERS
+// ============================================================
+function renderDeadlineBadge(dl, targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  if (!dl) { el.innerHTML = ''; return; }
+
+  const now  = new Date();
+  const dlDt = new Date(dl);
+  const diff = dlDt - now;
+  const days = Math.floor(diff / (1000*60*60*24));
+  const hrs  = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+
+  let cls = 'safe', label = '';
+  if (diff < 0)        { cls = 'expired'; label = 'Deadline terlewat'; }
+  else if (days < 1)   { cls = 'danger';  label = `${hrs}j lagi`; }
+  else if (days < 3)   { cls = 'warning'; label = `${days}h ${hrs}j lagi`; }
+  else                 { cls = 'safe';    label = `Deadline: ${formatDate(dl)}`; }
+
+  el.innerHTML = `<span class="deadline-badge ${cls}"><i class="fas fa-clock"></i> ${label}</span>`;
+}
+
+// ============================================================
+// REFRESH
+// ============================================================
+async function refreshApp() {
+  const ico = document.querySelector('#topbar-refresh i');
+  ico.style.animation = 'spin .7s linear infinite';
+  setCloudStatus('sync');
+  try {
+    const { data } = await sb.from('config').select('*').eq('id',1).single();
+    if (data) appConfig = data;
+    if (session.role === 'admin') {
+      await loadAdminData();
+      renderOverview();
+    } else {
+      renderUploadPanel();
+    }
+    setCloudStatus('online');
+    toast('info', 'Data diperbarui.');
+  } catch {
+    setCloudStatus('offline');
+    toast('error', 'Gagal refresh data.');
+  }
+  setTimeout(() => { ico.style.animation = ''; }, 1000);
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function showLoading(msg) {
+  document.getElementById('loading-overlay').style.display = 'flex';
+  document.getElementById('loading-text').textContent = msg || 'Memproses...';
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+function setCloudStatus(s) {
+  const dot  = document.getElementById('cloud-dot');
+  const txt  = document.getElementById('cloud-text');
+  dot.className = 'dot';
+  if (s === 'online')  { dot.classList.add('dot-online');  txt.textContent = 'Online'; }
+  else if (s === 'offline'){ dot.classList.add('dot-offline'); txt.textContent = 'Offline'; }
+  else if (s === 'sync')   { dot.classList.add('dot-sync');    txt.textContent = 'Sinkron...'; }
+}
+
+function toast(type, msg) {
+  const container = document.getElementById('toast-container');
+  const icons = { success:'fas fa-check-circle', error:'fas fa-times-circle', info:'fas fa-info-circle', warn:'fas fa-exclamation-triangle' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type === 'warn' ? 'warn' : type}`;
+  el.innerHTML = `<i class="${icons[type] || icons.info}"></i> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function printProgress() {
+  window.print();
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
