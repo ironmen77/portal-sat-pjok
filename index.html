@@ -202,9 +202,84 @@ a { color: var(--c-primary); text-decoration: none; }
    ============================================================ */
 #login-page {
   position: fixed; inset: 0;
-  background: linear-gradient(135deg, #0F2347 0%, #1B3A6B 50%, #122855 100%);
+  overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   z-index: 1000;
+  background: #0f2347;
+}
+/* Bendera berkibar — layer gradasi animasi */
+#login-page::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0)   0%,
+      rgba(255,255,255,.06) 20%,
+      rgba(255,255,255,0)   40%,
+      rgba(255,255,255,.04) 60%,
+      rgba(255,255,255,0)   80%,
+      rgba(255,255,255,.07) 100%
+    ),
+    linear-gradient(135deg, #0A1A3A 0%, #1B3A6B 30%, #2A5298 55%, #1B3A6B 75%, #0F2347 100%);
+  animation: flagWave 6s ease-in-out infinite;
+}
+#login-page::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 120px,
+    rgba(255,255,255,.018) 120px,
+    rgba(255,255,255,.018) 240px
+  );
+  animation: flagWave2 8s ease-in-out infinite;
+}
+/* Bintang/partikel latar */
+.login-stars {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.login-stars span {
+  position: absolute; width: 2px; height: 2px; border-radius: 50%;
+  background: rgba(255,255,255,.6); animation: twinkle 3s ease-in-out infinite;
+}
+@keyframes flagWave {
+  0%   { transform: skewX(0deg) scaleX(1); opacity:.9; }
+  25%  { transform: skewX(.8deg) scaleX(1.004); opacity:1; }
+  50%  { transform: skewX(-.5deg) scaleX(.998); opacity:.95; }
+  75%  { transform: skewX(.6deg) scaleX(1.003); opacity:1; }
+  100% { transform: skewX(0deg) scaleX(1); opacity:.9; }
+}
+@keyframes flagWave2 {
+  0%,100% { transform: translateX(0); }
+  50%     { transform: translateX(-20px); }
+}
+@keyframes twinkle {
+  0%,100% { opacity:.2; transform: scale(1); }
+  50%     { opacity:1;  transform: scale(1.4); }
+}
+/* Jalur putih horizontal tipis sebagai stripe bendera */
+.login-stripes {
+  position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 80px,
+    rgba(255,255,255,.025) 80px,
+    rgba(255,255,255,.025) 81px
+  );
+  animation: flagWave 7s ease-in-out infinite reverse;
+}
+#login-page .login-wrap {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center;
+}
+/* Sub-branding di bawah card */
+.login-footer-text {
+  color: rgba(255,255,255,.35);
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .1em;
+  margin-top: 20px; text-align: center;
 }
 .login-card {
   background: #fff;
@@ -595,6 +670,9 @@ a { color: var(--c-primary); text-decoration: none; }
      LOGIN PAGE
      ============================================================ -->
 <div id="login-page">
+  <div class="login-stars" id="login-stars"></div>
+  <div class="login-stripes"></div>
+  <div class="login-wrap">
   <div class="login-card">
     <div class="login-logo">
       <img src="https://github.com/strafrechtsBoys/pendaftaran_o2sn_psg/blob/main/Permohonan%20Proposal%20CSR%20Raker%20KKG%20PJOK%20PSG.png?raw=true" alt="Logo SAT">
@@ -622,6 +700,8 @@ a { color: var(--c-primary); text-decoration: none; }
       <i class="fas fa-exclamation-circle"></i> Username atau password tidak valid.
     </div>
   </div>
+  <div class="login-footer-text">Hak Cipta &copy; 2026 @gurumasakini &nbsp;|&nbsp; KKG PJOK Kec. Pesanggrahan</div>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -646,11 +726,17 @@ a { color: var(--c-primary); text-decoration: none; }
         <button class="nav-item" data-view="writer-workspace" onclick="switchView('writer-workspace')">
           <i class="fas fa-layer-group"></i> Ruang Kerja
         </button>
+        <button class="nav-item" data-view="writer-panduan" onclick="switchView('writer-panduan')">
+          <i class="fas fa-book-open"></i> Panduan & Format
+        </button>
         <button class="nav-item" data-view="writer-history" onclick="switchView('writer-history')">
           <i class="fas fa-history"></i> Riwayat Upload
         </button>
         <button class="nav-item" data-view="writer-account" onclick="switchView('writer-account')">
           <i class="fas fa-user-cog"></i> Akun Saya
+        </button>
+        <button class="nav-item" id="nav-writer-final" data-view="writer-final" onclick="switchView('writer-final')" style="display:none">
+          <i class="fas fa-star" style="color:#C8990A"></i> Berkas Final
         </button>
       </div>
 
@@ -765,6 +851,27 @@ a { color: var(--c-primary); text-decoration: none; }
       </div>
 
       <!-- ====================================================
+           WRITER: PANDUAN & FORMAT
+           ==================================================== -->
+      <div class="view" id="view-writer-panduan">
+        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--c-primary)">
+          <div class="card-body" style="display:flex;align-items:center;gap:12px">
+            <i class="fas fa-book-open" style="font-size:22px;color:var(--c-primary)"></i>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text-1)">Panduan Penulisan Soal SAT</div>
+              <div style="font-size:13px;color:var(--text-2);margin-top:2px">Baca dan unduh format yang wajib digunakan sebelum mengerjakan soal.</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px" id="panduan-grid">
+          <!-- diisi dinamis oleh loadWriterPanduan() -->
+          <div style="text-align:center;padding:30px;color:var(--text-3);grid-column:1/-1">
+            <i class="fas fa-spinner fa-spin"></i> Memuat dokumen...
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
            WRITER: RIWAYAT UPLOAD
            ==================================================== -->
       <div class="view" id="view-writer-history">
@@ -812,6 +919,24 @@ a { color: var(--c-primary); text-decoration: none; }
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           WRITER: BERKAS FINAL
+           ==================================================== -->
+      <div class="view" id="view-writer-final">
+        <div class="card" style="border-left:4px solid var(--c-accent);margin-bottom:20px">
+          <div class="card-body" style="display:flex;align-items:center;gap:12px">
+            <i class="fas fa-star" style="font-size:22px;color:var(--c-accent)"></i>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text-1)">Selamat! Semua berkas Anda telah terverifikasi.</div>
+              <div style="font-size:13px;color:var(--text-2);margin-top:2px">Berikut tautan folder final yang dapat Anda akses.</div>
+            </div>
+          </div>
+        </div>
+        <div id="writer-final-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+          <div style="text-align:center;padding:30px;color:var(--text-3)"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
         </div>
       </div>
 
@@ -977,7 +1102,7 @@ a { color: var(--c-primary); text-decoration: none; }
           <div class="card" style="grid-column:1/-1">
             <div class="card-header"><h3>Deadline Pengumpulan Per Kelas</h3></div>
             <div class="card-body">
-              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" id="deadline-inputs"></div>
+              <div style="display:flex;flex-wrap:wrap;gap:12px" id="deadline-inputs"></div>
               <div style="margin-top:12px">
                 <button class="btn btn-solid-primary btn-sm" onclick="saveDeadlines()">
                   <i class="fas fa-clock"></i> Simpan Deadline
@@ -1005,21 +1130,44 @@ a { color: var(--c-primary); text-decoration: none; }
           </div>
 
           <!-- Link Tugas & Visibilitas -->
-          <div class="card">
+          <div class="card" style="grid-column:1/-1">
             <div class="card-header"><h3>Visibilitas & Tautan</h3></div>
             <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">Link Pembagian Tugas</label>
-                <input type="text" id="conf-link-tugas" class="form-control" placeholder="https://docs.google.com/...">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Link Pembagian Tugas</label>
+                  <input type="text" id="conf-link-tugas" class="form-control" placeholder="https://docs.google.com/...">
+                  <div class="form-hint">Ditampilkan di ruang kerja penulis</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Link Panduan Penulisan Soal</label>
+                  <input type="text" id="conf-link-panduan" class="form-control" placeholder="https://docs.google.com/...">
+                  <div class="form-hint">Dokumen panduan umum penulisan</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Link Format Kartu Soal</label>
+                  <input type="text" id="conf-link-kartu" class="form-control" placeholder="https://docs.google.com/...">
+                  <div class="form-hint">Template kartu soal yang harus diikuti</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Link Format Kisi-kisi</label>
+                  <input type="text" id="conf-link-kisi" class="form-control" placeholder="https://docs.google.com/...">
+                  <div class="form-hint">Template kisi-kisi yang harus diikuti</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Link Format Naskah Soal</label>
+                  <input type="text" id="conf-link-naskah" class="form-control" placeholder="https://docs.google.com/...">
+                  <div class="form-hint">Template naskah soal yang harus diikuti</div>
+                </div>
               </div>
-              <div class="form-group">
+              <div class="form-group" style="margin-top:6px">
                 <div class="toggle-wrap">
                   <button class="toggle" id="tog-show-drive" onclick="this.classList.toggle('on')"></button>
                   <span class="toggle-label">Tampilkan link Drive ke Penulis</span>
                 </div>
               </div>
               <button class="btn btn-solid-primary btn-sm" onclick="saveVisibilityConfig()">
-                <i class="fas fa-save"></i> Simpan
+                <i class="fas fa-save"></i> Simpan Semua Tautan
               </button>
             </div>
           </div>
@@ -1087,6 +1235,12 @@ Segera upload berkas melalui Portal SAT. Terima kasih.</textarea>
       </div>
 
     </div><!-- /page-content -->
+
+    <!-- FOOTER -->
+    <footer style="padding:14px 28px;border-top:1px solid var(--border);background:var(--surface);text-align:center;font-size:11px;color:var(--text-3);font-weight:500;letter-spacing:.04em;flex-shrink:0">
+      Hak Cipta &copy; 2026 <strong style="color:var(--text-2)">@gurumasakini</strong> &nbsp;|&nbsp; KKG PJOK Kec. Pesanggrahan
+    </footer>
+
   </div><!-- /main-content -->
 </div><!-- /app -->
 
@@ -1225,8 +1379,8 @@ Segera upload berkas melalui Portal SAT. Terima kasih.</textarea>
 // ============================================================
 // KONFIGURASI — ISI SESUAI SETUP KAMU
 // ============================================================
-const SUPABASE_URL = 'https://zdmcaxpytcgqgoawligy.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkbWNheHB5dGNncWdvYXdsaWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NDkxMDgsImV4cCI6MjA5NTQyNTEwOH0.sS9oQD6W9WjYq8RJ4_Ka20yow4S9ydyeXMp3RPCRn2s';
+const SUPABASE_URL = 'https://knessyxjvvnrfxkvcxyf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZXNzeXhqdnZucmZ4a3ZjeHlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzYzNTQsImV4cCI6MjA5NTQ1MjM1NH0.XNdATagCFjac6L5AB6-MfvafGNH73Zet24Cnj5jV3Wo';
 
 // ============================================================
 // INIT SUPABASE
@@ -1257,6 +1411,17 @@ const TYPE_ICON  = { kartu: 'fas fa-file-word', kisi: 'fas fa-list-check', naska
 // ============================================================
 // BOOT
 // ============================================================
+// Generate bintang login
+(function(){
+  const container = document.getElementById('login-stars');
+  if (!container) return;
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('span');
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+    container.appendChild(s);
+  }
+})();
+
 window.onload = async function() {
   showLoading('Menghubungkan ke database...');
   try {
@@ -1391,6 +1556,8 @@ function switchView(viewId) {
     'writer-workspace': ['Penulis', 'Ruang Kerja Soal'],
     'writer-history':   ['Penulis', 'Riwayat Upload'],
     'writer-account':   ['Penulis', 'Akun Saya'],
+    'writer-panduan':   ['Penulis', 'Panduan & Format'],
+    'writer-final':     ['Penulis', 'Berkas Final'],
     'admin-overview':   ['Admin', 'Ringkasan'],
     'admin-progress':   ['Admin', 'Progres Kelas'],
     'admin-revisions':  ['Admin', 'Permintaan Revisi'],
@@ -1408,6 +1575,8 @@ function switchView(viewId) {
   if (viewId === 'admin-config')    loadConfigForm();
   if (viewId === 'admin-broadcast') loadBroadcastForm();
   if (viewId === 'writer-history')  loadWriterHistory();
+  if (viewId === 'writer-final')    loadWriterFinal();
+  if (viewId === 'writer-panduan')  loadWriterPanduan();
   if (viewId === 'admin-progress')  renderProgressTable();
 }
 
@@ -2224,9 +2393,9 @@ async function saveNewUser() {
   if (classes.length === 0) { toast('warn', 'Pilih minimal satu kelas.'); return; }
 
   showLoading('Menyimpan penulis...');
-  const { data, error } = await sb.from('users').insert({
-    name, username, password, phone: phone || null, assigned_classes: classes
-  }).select().single();
+  const insertPayload = { name, username, password, assigned_classes: classes };
+  if (phone) insertPayload.phone = phone;
+  const { data, error } = await sb.from('users').insert(insertPayload).select().single();
   hideLoading();
 
   if (error) { toast('error', 'Gagal: ' + error.message); return; }
@@ -2311,7 +2480,9 @@ async function processBulkUpload(files) {
       const name = cols[0]?.trim(), user = cols[1]?.trim(), pass = cols[2]?.trim(), phone = cols[3]?.trim() || null;
       if (!name || !user || !pass) continue;
       if (allUsers.find(u => u.username === user)) continue;
-      toInsert.push({ name, username: user, password: pass, phone, assigned_classes: KELAS_LIST });
+      const row = { name, username: user, password: pass, assigned_classes: KELAS_LIST };
+      if (phone) row.phone = phone;
+      toInsert.push(row);
       count++;
     }
     if (count === 0) { toast('warn', 'Tidak ada data baru untuk diimport.'); return; }
@@ -2331,9 +2502,19 @@ async function processBulkUpload(files) {
 // ============================================================
 function loadConfigForm() {
   if (!appConfig) return;
-  document.getElementById('conf-gas-url').value   = GAS_URL;
+  document.getElementById('conf-gas-url').value      = GAS_URL;
   document.getElementById('conf-fonnte-token').value = appConfig.fonnte_token || '';
   document.getElementById('conf-link-tugas').value   = appConfig.link_tugas || '';
+  // link panduan — safe access dengan optional chaining
+  const lp = appConfig.link_panduan || {};
+  const elPanduan = document.getElementById('conf-link-panduan');
+  const elKartu   = document.getElementById('conf-link-kartu');
+  const elKisi    = document.getElementById('conf-link-kisi');
+  const elNaskah  = document.getElementById('conf-link-naskah');
+  if (elPanduan) elPanduan.value = lp.panduan || appConfig.link_panduan_umum || '';
+  if (elKartu)   elKartu.value   = lp.kartu   || appConfig.link_panduan_kartu || '';
+  if (elKisi)    elKisi.value    = lp.kisi     || appConfig.link_panduan_kisi  || '';
+  if (elNaskah)  elNaskah.value  = lp.naskah   || appConfig.link_panduan_naskah|| '';
   document.getElementById('tog-show-drive').className = 'toggle' + (appConfig.show_drive_to_writers ? ' on' : '');
 
   buildConfClassTabs();
@@ -2361,7 +2542,10 @@ function buildConfClassTabs() {
 
 function renderConfFields() {
   const k   = activeConfClass;
-  const lnk = appConfig && appConfig.links ? (appConfig.links[k] || {}) : {};
+  let rawLinks = appConfig && appConfig.links ? appConfig.links : {};
+  // Supabase kadang return JSONB sebagai string — parse jika perlu
+  if (typeof rawLinks === 'string') { try { rawLinks = JSON.parse(rawLinks); } catch(e) { rawLinks = {}; } }
+  const lnk = rawLinks[k] || {};
   document.getElementById('conf-class-fields').innerHTML = `
     <div class="form-row">
       <div class="form-group">
@@ -2398,13 +2582,16 @@ function renderConfFields() {
 }
 
 function buildDeadlineInputs() {
-  const dls = appConfig ? appConfig.deadlines : {};
+  let dls = appConfig ? appConfig.deadlines : {};
+  if (typeof dls === 'string') { try { dls = JSON.parse(dls); } catch(e) { dls = {}; } }
   const wrap = document.getElementById('deadline-inputs');
   wrap.innerHTML = '';
   KELAS_LIST.forEach(k => {
     const val = dls && dls[k] ? dls[k].slice(0,16) : '';
     const div = document.createElement('div');
     div.className = 'form-group';
+    div.style.minWidth = '160px';
+    div.style.flex = '1';
     div.innerHTML = `
       <label class="form-label">Kelas ${k.replace('kelas','')}</label>
       <input type="datetime-local" id="dl-${k}" class="form-control" value="${val}">
@@ -2487,15 +2674,27 @@ async function testWaNotif() {
 }
 
 async function saveVisibilityConfig() {
-  const showDrive = document.getElementById('tog-show-drive').classList.contains('on');
-  const linkTugas = document.getElementById('conf-link-tugas').value.trim();
+  const showDrive  = document.getElementById('tog-show-drive').classList.contains('on');
+  const linkTugas  = document.getElementById('conf-link-tugas').value.trim();
+  const lp = {
+    panduan: (document.getElementById('conf-link-panduan')?.value || '').trim(),
+    kartu:   (document.getElementById('conf-link-kartu')?.value   || '').trim(),
+    kisi:    (document.getElementById('conf-link-kisi')?.value    || '').trim(),
+    naskah:  (document.getElementById('conf-link-naskah')?.value  || '').trim(),
+  };
   showLoading('Menyimpan...');
-  const { error } = await sb.from('config').update({ show_drive_to_writers: showDrive, link_tugas: linkTugas, updated_at: new Date().toISOString() }).eq('id', 1);
+  const { error } = await sb.from('config').update({
+    show_drive_to_writers: showDrive,
+    link_tugas:   linkTugas,
+    link_panduan: lp,
+    updated_at:   new Date().toISOString()
+  }).eq('id', 1);
   hideLoading();
-  if (error) { toast('error', 'Gagal.'); return; }
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
   appConfig.show_drive_to_writers = showDrive;
-  appConfig.link_tugas = linkTugas;
-  toast('success', 'Konfigurasi visibilitas disimpan.');
+  appConfig.link_tugas   = linkTugas;
+  appConfig.link_panduan = lp;
+  toast('success', 'Semua tautan berhasil disimpan.');
 }
 
 async function testGasUrl() {
@@ -2598,6 +2797,127 @@ async function sendBulkWAReminder() {
 
   hideLoading();
   toast('success', `Reminder terkirim ke ${sent} dari ${targets.length} nomor.`);
+}
+
+// ============================================================
+// WRITER: PANDUAN & FORMAT
+// ============================================================
+async function loadWriterPanduan() {
+  const grid = document.getElementById('panduan-grid');
+  if (!grid) return;
+
+  // Refresh config
+  const { data } = await sb.from('config').select('link_tugas,link_panduan').eq('id',1).single();
+  const lp = (data && data.link_panduan) ? data.link_panduan : {};
+  const linkTugas = data ? data.link_tugas : '';
+
+  const items = [
+    { label: 'Panduan Penulisan Soal', sub: 'Ketentuan umum penulisan soal SAT PJOK', icon: 'fas fa-book', color: '#1B3A6B', key: 'panduan', url: lp.panduan },
+    { label: 'Format Kartu Soal',      sub: 'Template wajib untuk kartu soal',        icon: 'fas fa-file-word',  color: '#1565C0', key: 'kartu',   url: lp.kartu },
+    { label: 'Format Kisi-kisi',       sub: 'Template wajib untuk kisi-kisi',          icon: 'fas fa-list-check', color: '#1A7A4A', key: 'kisi',    url: lp.kisi },
+    { label: 'Format Naskah Soal',     sub: 'Template wajib untuk naskah soal',        icon: 'fas fa-file-lines', color: '#B7600A', key: 'naskah',  url: lp.naskah },
+  ];
+
+  // Tambahkan link pembagian tugas jika ada
+  const extras = linkTugas
+    ? `<div style="margin-top:20px;padding:14px 18px;background:#F0F4FF;border-radius:10px;border:1px solid #C7D6F5;display:flex;align-items:center;gap:12px">
+        <i class="fas fa-table" style="color:#1B3A6B;font-size:18px"></i>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#1B3A6B">Tabel Pembagian Tugas</div>
+          <div style="font-size:12px;color:#4B5563;margin-top:2px">Cek pembagian kelas dan jenis soal yang menjadi tanggung jawab Anda</div>
+        </div>
+        <a href="${linkTugas}" target="_blank" class="btn btn-solid-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka</a>
+      </div>` : '';
+
+  const anyLink = items.some(i => i.url);
+
+  if (!anyLink) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text-3)">
+      <i class="fas fa-clock" style="font-size:30px;margin-bottom:10px;display:block"></i>
+      <div style="font-size:14px;font-weight:600">Dokumen panduan belum tersedia.</div>
+      <div style="font-size:13px;margin-top:4px">Silakan hubungi koordinator KKG.</div>
+    </div>${extras}`;
+    return;
+  }
+
+  grid.innerHTML = items.map(item => `
+    <div style="background:#fff;border:1.5px solid ${item.url ? 'var(--border)' : '#E5E7EB'};border-radius:12px;padding:22px 20px;display:flex;flex-direction:column;gap:10px;${!item.url?'opacity:.5':''}">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:10px;background:${item.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="${item.icon}" style="font-size:20px;color:${item.color}"></i>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-1)">${item.label}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:2px">${item.sub}</div>
+        </div>
+      </div>
+      ${item.url
+        ? `<a href="${item.url}" target="_blank" class="btn btn-outline btn-sm" style="justify-content:center;text-decoration:none;margin-top:auto">
+             <i class="fas fa-external-link-alt"></i> Buka Dokumen
+           </a>`
+        : `<div style="text-align:center;font-size:12px;color:var(--text-3);padding:6px 0;border:1px dashed var(--border);border-radius:6px">Belum tersedia</div>`
+      }
+    </div>
+  `).join('') + extras;
+}
+
+// ============================================================
+// WRITER: BERKAS FINAL
+// ============================================================
+async function loadWriterFinal() {
+  const grid = document.getElementById('writer-final-grid');
+  if (!grid) return;
+
+  // Ambil config links
+  const { data: cfg } = await sb.from('config').select('links,show_final_link').eq('id',1).single();
+  const links = cfg ? cfg.links : {};
+
+  // Hitung berapa kelas yang semua slot-nya locked
+  const { data: subs } = await sb.from('submissions').select('*').eq('user_id', session.id);
+  const subsArr = subs || [];
+
+  const assigned = session.assigned_classes || KELAS_LIST;
+  const allLocked = assigned.every(k =>
+    TYPE_LIST.every(t => subsArr.some(s => s.kelas === k && s.type === t && s.status === 'locked'))
+  );
+
+  if (!allLocked) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3)">
+      <i class="fas fa-lock" style="font-size:32px;margin-bottom:12px;display:block"></i>
+      <div style="font-size:14px;font-weight:600;color:var(--text-2)">Tautan belum tersedia.</div>
+      <div style="font-size:13px;margin-top:6px">Semua berkas Anda harus dikunci oleh admin terlebih dahulu.</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = assigned.map(k => {
+    const klsLinks = links[k] || {};
+    const kelasNum = k.replace('kelas','');
+    const items = [
+      { label: 'Kartu Soal', icon: 'fas fa-file-word',  color: '#1565C0', url: klsLinks.kartu },
+      { label: 'Kisi-kisi',  icon: 'fas fa-list-check', color: '#1A7A4A', url: klsLinks.kisi },
+      { label: 'Naskah Soal',icon: 'fas fa-file-lines', color: '#B7600A', url: klsLinks.naskah },
+      { label: 'Folder Lengkap', icon: 'fas fa-folder', color: '#C8990A', url: klsLinks.folder },
+    ];
+    const hasAny = items.some(i => i.url);
+    return `
+      <div class="card">
+        <div class="card-header"><h3>Kelas ${kelasNum}</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+          ${hasAny
+            ? items.filter(i => i.url).map(i => `
+                <a href="${i.url}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text-1);transition:all .15s" onmouseover="this.style.borderColor='${i.color}'" onmouseout="this.style.borderColor='var(--border)'">
+                  <i class="${i.icon}" style="color:${i.color};font-size:16px;width:20px;text-align:center"></i>
+                  <span style="font-size:13px;font-weight:500">${i.label}</span>
+                  <i class="fas fa-external-link-alt" style="margin-left:auto;font-size:11px;color:var(--text-3)"></i>
+                </a>
+              `).join('')
+            : `<div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">Link belum diset admin.</div>`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ============================================================
