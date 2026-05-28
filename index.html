@@ -1531,9 +1531,25 @@ window.onload = async function() {
   } catch (err) {
     console.error('Boot error:', err);
     setCloudStatus('offline');
+    // Tampilkan pesan di login agar user tahu koneksi bermasalah
+    setTimeout(() => {
+      const errEl = document.getElementById('login-error');
+      if (errEl) {
+        errEl.style.display = 'block';
+        errEl.innerHTML = '<i class="fas fa-wifi"></i> Koneksi ke database gagal. Cek URL & key Supabase, atau coba refresh.';
+      }
+    }, 500);
   }
   hideLoading();
   checkSession();
+
+  // Pasang listener setelah DOM pasti siap
+  const pwdInput = document.getElementById('inp-password');
+  if (pwdInput) {
+    pwdInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  }
 };
 
 // ============================================================
@@ -1559,11 +1575,15 @@ async function handleLogin() {
 
   // Cek admin
   if (u === 'admin') {
-    const adminPass = appConfig ? appConfig.admin_password : 'admin123';
+    const adminPass = (appConfig && appConfig.admin_password) ? appConfig.admin_password : 'admin123';
     if (p === adminPass) {
       session = { id: null, name: 'Admin Pusat', username: 'admin', role: 'admin', assigned_classes: KELAS_LIST };
       sessionStorage.setItem('sat_session', JSON.stringify(session));
       showMainApp();
+      return;
+    } else {
+      errEl.style.display = 'block';
+      errEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Password admin salah.';
       return;
     }
   }
@@ -1593,9 +1613,7 @@ async function handleLogin() {
   }
 }
 
-document.getElementById('inp-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleLogin();
-});
+// addEventListener dipindah ke window.onload agar aman
 
 function handleLogout() {
   sessionStorage.removeItem('sat_session');
