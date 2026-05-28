@@ -902,9 +902,42 @@ a { color: var(--c-primary); text-decoration: none; }
            WRITER: AKUN
            ==================================================== -->
       <div class="view" id="view-writer-account">
-        <div style="max-width:440px">
+        <div style="max-width:480px;display:flex;flex-direction:column;gap:16px">
+
+          <!-- Profil ringkas -->
+          <div class="card" style="border-top:3px solid var(--c-primary)">
+            <div class="card-body" style="display:flex;align-items:center;gap:14px">
+              <div class="avatar" style="width:48px;height:48px;font-size:18px;background:var(--c-primary)" id="account-avatar">?</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text-1)" id="account-name">—</div>
+                <div style="font-size:12px;color:var(--text-3);margin-top:2px" id="account-username">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nomor HP / WhatsApp -->
           <div class="card">
-            <div class="card-header"><h3>Ubah Password</h3></div>
+            <div class="card-header"><h3><i class="fab fa-whatsapp" style="color:#25D366;margin-right:6px"></i>Nomor WhatsApp</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Nomor HP / WA</label>
+                <div class="input-wrap">
+                  <i class="fas fa-phone" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px"></i>
+                  <input type="tel" id="inp-phone" class="form-control" style="padding-left:36px"
+                    placeholder="Contoh: 081234567890"
+                    oninput="this.value=this.value.replace(/[^0-9+]/g,'')">
+                </div>
+                <div class="form-hint">Digunakan admin untuk kirim notifikasi reminder deadline via WhatsApp</div>
+              </div>
+              <button class="btn btn-solid-primary" onclick="updateSelfPhone()">
+                <i class="fas fa-save"></i> Simpan Nomor
+              </button>
+            </div>
+          </div>
+
+          <!-- Ubah Password -->
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-lock" style="margin-right:6px"></i>Ubah Password</h3></div>
             <div class="card-body">
               <div class="form-group">
                 <label class="form-label">Password Baru</label>
@@ -919,6 +952,7 @@ a { color: var(--c-primary); text-decoration: none; }
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -1443,8 +1477,8 @@ Segera upload berkas melalui Portal SAT. Terima kasih.</textarea>
 // ============================================================
 // KONFIGURASI — ISI SESUAI SETUP KAMU
 // ============================================================
-const SUPABASE_URL = 'https://knessyxjvvnrfxkvcxyf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZXNzeXhqdnZucmZ4a3ZjeHlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzYzNTQsImV4cCI6MjA5NTQ1MjM1NH0.XNdATagCFjac6L5AB6-MfvafGNH73Zet24Cnj5jV3Wo';
+const SUPABASE_URL = 'ISI_SUPABASE_URL_KAMU';
+const SUPABASE_ANON_KEY = 'ISI_SUPABASE_ANON_KEY_KAMU';
 
 // ============================================================
 // INIT SUPABASE
@@ -1640,6 +1674,7 @@ function switchView(viewId) {
   if (viewId === 'admin-config')    loadConfigForm();
   if (viewId === 'admin-broadcast') loadBroadcastForm();
   if (viewId === 'writer-history')  loadWriterHistory();
+  if (viewId === 'writer-account')  loadWriterAccount();
   if (viewId === 'writer-final')    loadWriterFinal();
   if (viewId === 'writer-panduan')  loadWriterPanduan();
   if (viewId === 'admin-progress')  renderProgressTable();
@@ -2032,6 +2067,44 @@ function actionBadgeClass(action) {
 // ============================================================
 // WRITER ACCOUNT
 // ============================================================
+function loadWriterAccount() {
+  // Isi profil ringkas
+  const nameEl   = document.getElementById('account-name');
+  const uNameEl  = document.getElementById('account-username');
+  const avatarEl = document.getElementById('account-avatar');
+  const phoneEl  = document.getElementById('inp-phone');
+  if (nameEl)   nameEl.textContent   = session.name     || '—';
+  if (uNameEl)  uNameEl.textContent  = '@' + (session.username || '—');
+  if (avatarEl) avatarEl.textContent = (session.name || '?').charAt(0).toUpperCase();
+  if (phoneEl)  phoneEl.value        = session.phone    || '';
+}
+
+async function updateSelfPhone() {
+  const phone = document.getElementById('inp-phone').value.trim();
+
+  // Validasi format dasar
+  if (phone && !/^[0-9+]{8,15}$/.test(phone)) {
+    toast('warn', 'Format nomor tidak valid. Gunakan angka, contoh: 081234567890');
+    return;
+  }
+
+  showLoading('Menyimpan nomor WhatsApp...');
+  const { error } = await sb.from('users')
+    .update({ phone: phone || null })
+    .eq('id', session.id);
+  hideLoading();
+
+  if (error) { toast('error', 'Gagal menyimpan: ' + error.message); return; }
+
+  // Update session lokal
+  session.phone = phone || null;
+  sessionStorage.setItem('sat_session', JSON.stringify(session));
+
+  toast('success', phone
+    ? `Nomor ${phone} berhasil disimpan.`
+    : 'Nomor WA dihapus dari akun.');
+}
+
 async function updateSelfPass() {
   const p1 = document.getElementById('inp-new-pass').value;
   const p2 = document.getElementById('inp-confirm-pass').value;
