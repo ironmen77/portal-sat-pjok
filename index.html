@@ -926,17 +926,47 @@ a { color: var(--c-primary); text-decoration: none; }
            WRITER: BERKAS FINAL
            ==================================================== -->
       <div class="view" id="view-writer-final">
-        <div class="card" style="border-left:4px solid var(--c-accent);margin-bottom:20px">
-          <div class="card-body" style="display:flex;align-items:center;gap:12px">
-            <i class="fas fa-star" style="font-size:22px;color:var(--c-accent)"></i>
-            <div>
-              <div style="font-size:15px;font-weight:700;color:var(--text-1)">Selamat! Semua berkas Anda telah terverifikasi.</div>
-              <div style="font-size:13px;color:var(--text-2);margin-top:2px">Berikut tautan folder final yang dapat Anda akses.</div>
+        <!-- Status bar — berubah sesuai kondisi akses -->
+        <div id="final-status-bar" style="margin-bottom:20px"></div>
+
+        <!-- Konten terkunci -->
+        <div id="final-locked-state" style="display:none">
+          <div style="text-align:center;padding:60px 20px">
+            <div style="width:80px;height:80px;border-radius:50%;background:#F0F2F6;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+              <i class="fas fa-lock" style="font-size:34px;color:var(--text-3)"></i>
+            </div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:8px">Akses Belum Tersedia</div>
+            <div style="font-size:13px;color:var(--text-2);max-width:360px;margin:0 auto;line-height:1.7">
+              Halaman ini dapat diakses setelah <strong>seluruh berkas Anda dikunci oleh admin</strong>,
+              atau jika admin memberikan akses manual.
             </div>
           </div>
         </div>
-        <div id="writer-final-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
-          <div style="text-align:center;padding:30px;color:var(--text-3)"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
+
+        <!-- Konten terbuka -->
+        <div id="final-open-state" style="display:none">
+          <!-- File Final Admin — Naskah Final & Kisi-kisi Final -->
+          <div class="card" style="margin-bottom:24px;border-top:3px solid var(--c-accent)">
+            <div class="card-header">
+              <h3><i class="fas fa-crown" style="color:var(--c-accent);margin-right:8px"></i>Dokumen Final dari Admin</h3>
+              <span class="badge badge-uploaded">Resmi</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px" id="final-admin-docs">
+                <div style="text-align:center;padding:20px;color:var(--text-3)"><i class="fas fa-spinner fa-spin"></i></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- File per Kelas -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em">
+              Folder Berkas per Kelas
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px" id="writer-final-grid">
+            <div style="text-align:center;padding:30px;color:var(--text-3)"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
+          </div>
         </div>
       </div>
 
@@ -1035,6 +1065,7 @@ a { color: var(--c-primary); text-decoration: none; }
                   <th>No. WA</th>
                   <th>Kelas Ditugaskan</th>
                   <th>Status</th>
+                  <th style="text-align:center">Akses Final</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -1108,6 +1139,39 @@ a { color: var(--c-primary); text-decoration: none; }
                   <i class="fas fa-clock"></i> Simpan Deadline
                 </button>
               </div>
+            </div>
+          </div>
+
+          <!-- File Final Admin -->
+          <div class="card" style="grid-column:1/-1">
+            <div class="card-header">
+              <h3><i class="fas fa-crown" style="color:var(--c-accent);margin-right:6px"></i>File Final (Upload oleh Admin)</h3>
+              <span class="badge badge-pending">Ditampilkan ke penulis yang sudah selesai / diberi akses</span>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Link / URL Naskah Final</label>
+                  <input type="text" id="conf-naskah-final" class="form-control" placeholder="https://drive.google.com/... atau URL file">
+                  <div class="form-hint">URL file Naskah Soal Final yang sudah dikompilasi admin</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nama File Naskah Final</label>
+                  <input type="text" id="conf-naskah-final-label" class="form-control" placeholder="Naskah Soal Final SAT PJOK 2025">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Link / URL Kisi-kisi Final</label>
+                  <input type="text" id="conf-kisi-final" class="form-control" placeholder="https://drive.google.com/... atau URL file">
+                  <div class="form-hint">URL file Kisi-kisi Final yang sudah dikompilasi admin</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nama File Kisi-kisi Final</label>
+                  <input type="text" id="conf-kisi-final-label" class="form-control" placeholder="Kisi-kisi Final SAT PJOK 2025">
+                </div>
+              </div>
+              <button class="btn btn-solid-primary btn-sm" onclick="saveFinalFilesConfig()">
+                <i class="fas fa-save"></i> Simpan File Final
+              </button>
             </div>
           </div>
 
@@ -1533,6 +1597,7 @@ function showMainApp() {
     initWriterTabs();
     switchView('writer-workspace');
     loadWriterData();
+    checkAndShowFinalNav();
   }
 
   // Announcement
@@ -2357,12 +2422,22 @@ function renderUsersTable() {
   );
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-3)">Tidak ada data.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-3)">Tidak ada data.</td></tr>`;
     return;
   }
 
   filtered.forEach(user => {
     const assigned = (user.assigned_classes || KELAS_LIST).map(k => 'K'+k.replace('kelas','')).join(', ');
+
+    // Cek apakah semua berkas penulis ini sudah locked (auto-access)
+    const userSubsLocked = allSubs.filter(s =>
+      s.user_id === user.id && s.status === 'locked'
+    );
+    const totalSlots = (user.assigned_classes || KELAS_LIST).length * 3;
+    const allAutoLocked = userSubsLocked.length >= totalSlots && totalSlots > 0;
+    const manualAccess  = user.final_access === true;
+    const hasAccess     = allAutoLocked || manualAccess;
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><div class="cell-name">${user.name}</div></td>
@@ -2370,6 +2445,18 @@ function renderUsersTable() {
       <td style="font-size:12px">${user.phone || '—'}</td>
       <td><span class="badge badge-pending" style="font-size:10px">${assigned}</span></td>
       <td><span class="badge ${user.is_active ? 'badge-uploaded' : 'badge-late'}">${user.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
+      <td style="text-align:center">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          ${allAutoLocked
+            ? `<span class="badge badge-uploaded" title="Otomatis — semua berkas terkunci"><i class="fas fa-check"></i> Otomatis</span>`
+            : `<button class="toggle ${manualAccess ? 'on' : ''}" id="tog-final-${user.id}"
+                 onclick="toggleFinalAccess('${user.id}', this)"
+                 title="${manualAccess ? 'Cabut akses manual' : 'Beri akses manual'}">
+               </button>
+               <span style="font-size:10px;color:var(--text-3)">${manualAccess ? 'Manual' : 'Belum'}</span>`
+          }
+        </div>
+      </td>
       <td>
         <div style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-sm" onclick="openEditUser('${user.id}')" title="Edit"><i class="fas fa-edit"></i></button>
@@ -2505,6 +2592,17 @@ function loadConfigForm() {
   document.getElementById('conf-gas-url').value      = GAS_URL;
   document.getElementById('conf-fonnte-token').value = appConfig.fonnte_token || '';
   document.getElementById('conf-link-tugas').value   = appConfig.link_tugas || '';
+  // final files
+  const ff = appConfig.final_files || {};
+  const elNF = document.getElementById('conf-naskah-final');
+  const elNFL= document.getElementById('conf-naskah-final-label');
+  const elKF = document.getElementById('conf-kisi-final');
+  const elKFL= document.getElementById('conf-kisi-final-label');
+  if (elNF)  elNF.value  = ff.naskah_url   || '';
+  if (elNFL) elNFL.value = ff.naskah_label || '';
+  if (elKF)  elKF.value  = ff.kisi_url     || '';
+  if (elKFL) elKFL.value = ff.kisi_label   || '';
+
   // link panduan — safe access dengan optional chaining
   const lp = appConfig.link_panduan || {};
   const elPanduan = document.getElementById('conf-link-panduan');
@@ -2864,55 +2962,223 @@ async function loadWriterPanduan() {
 // ============================================================
 // WRITER: BERKAS FINAL
 // ============================================================
+// ============================================================
+// CEK NAV FINAL (writer) — tampilkan menu jika punya akses
+// ============================================================
+async function checkAndShowFinalNav() {
+  if (!session || session.role !== 'writer' || !session.id) return;
+  try {
+    const [subsRes, userRes] = await Promise.all([
+      sb.from('submissions').select('status,kelas,type').eq('user_id', session.id),
+      sb.from('users').select('final_access,assigned_classes').eq('id', session.id).single(),
+    ]);
+    const subs = subsRes.data || [];
+    const userData = userRes.data || {};
+    const assigned = userData.assigned_classes || session.assigned_classes || KELAS_LIST;
+    const manualAccess = userData.final_access === true;
+    const allLocked = assigned.every(k =>
+      TYPE_LIST.every(t => subs.some(s => s.kelas === k && s.type === t && s.status === 'locked'))
+    );
+    const navFinal = document.getElementById('nav-writer-final');
+    if (navFinal && (allLocked || manualAccess)) {
+      navFinal.style.display = 'flex';
+    }
+  } catch(e) { /* non-fatal */ }
+}
+
+// ============================================================
+// TOGGLE AKSES FINAL (admin)
+// ============================================================
+async function toggleFinalAccess(userId, btn) {
+  const isOn = btn.classList.contains('on');
+  const newVal = !isOn;
+  showLoading(newVal ? 'Memberi akses final...' : 'Mencabut akses final...');
+  const { error } = await sb.from('users')
+    .update({ final_access: newVal })
+    .eq('id', userId);
+  hideLoading();
+  if (error) { toast('error', 'Gagal update akses: ' + error.message); return; }
+
+  // Update lokal
+  const idx = allUsers.findIndex(u => u.id === userId);
+  if (idx !== -1) allUsers[idx].final_access = newVal;
+
+  btn.classList.toggle('on', newVal);
+  const label = btn.nextElementSibling;
+  if (label) label.textContent = newVal ? 'Manual' : 'Belum';
+
+  // Notif WA ke penulis
+  const user = allUsers.find(u => u.id === userId);
+  if (newVal && user && user.phone && appConfig?.fonnte_token && GAS_URL) {
+    sendWANotif(user.phone, `[Portal SAT] Halo ${user.name}, Anda kini memiliki akses ke halaman Berkas Final. Silakan login ke Portal SAT untuk mengunduh dokumen final.`);
+  }
+
+  toast(newVal ? 'success' : 'info', newVal ? 'Akses final diberikan.' : 'Akses final dicabut.');
+}
+
+// ============================================================
+// SIMPAN FILE FINAL CONFIG (admin)
+// ============================================================
+async function saveFinalFilesConfig() {
+  const finalFiles = {
+    naskah_url:   (document.getElementById('conf-naskah-final')?.value || '').trim(),
+    naskah_label: (document.getElementById('conf-naskah-final-label')?.value || '').trim() || 'Naskah Soal Final',
+    kisi_url:     (document.getElementById('conf-kisi-final')?.value || '').trim(),
+    kisi_label:   (document.getElementById('conf-kisi-final-label')?.value || '').trim() || 'Kisi-kisi Final',
+  };
+  showLoading('Menyimpan file final...');
+  const { error } = await sb.from('config')
+    .update({ final_files: finalFiles, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  hideLoading();
+  if (error) { toast('error', 'Gagal: ' + error.message); return; }
+  appConfig.final_files = finalFiles;
+  toast('success', 'Konfigurasi file final disimpan.');
+}
+
+// ============================================================
+// LOAD WRITER FINAL — cek akses, tampilkan file
+// ============================================================
 async function loadWriterFinal() {
-  const grid = document.getElementById('writer-final-grid');
-  if (!grid) return;
+  const lockedState = document.getElementById('final-locked-state');
+  const openState   = document.getElementById('final-open-state');
+  const statusBar   = document.getElementById('final-status-bar');
+  const grid        = document.getElementById('writer-final-grid');
+  const adminDocs   = document.getElementById('final-admin-docs');
 
-  // Ambil config links
-  const { data: cfg } = await sb.from('config').select('links,show_final_link').eq('id',1).single();
-  const links = cfg ? cfg.links : {};
+  if (!lockedState || !openState) return;
 
-  // Hitung berapa kelas yang semua slot-nya locked
-  const { data: subs } = await sb.from('submissions').select('*').eq('user_id', session.id);
-  const subsArr = subs || [];
+  // Ambil data fresh dari Supabase
+  const [cfgRes, subsRes, userRes] = await Promise.all([
+    sb.from('config').select('links,final_files').eq('id',1).single(),
+    sb.from('submissions').select('*').eq('user_id', session.id),
+    sb.from('users').select('final_access').eq('id', session.id).single(),
+  ]);
+
+  const cfg       = cfgRes.data || {};
+  const links     = cfg.links || {};
+  const finalFiles= cfg.final_files || {};
+  const subsArr   = subsRes.data || [];
+  const manualAccess = userRes.data?.final_access === true;
 
   const assigned = session.assigned_classes || KELAS_LIST;
   const allLocked = assigned.every(k =>
     TYPE_LIST.every(t => subsArr.some(s => s.kelas === k && s.type === t && s.status === 'locked'))
   );
 
-  if (!allLocked) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3)">
-      <i class="fas fa-lock" style="font-size:32px;margin-bottom:12px;display:block"></i>
-      <div style="font-size:14px;font-weight:600;color:var(--text-2)">Tautan belum tersedia.</div>
-      <div style="font-size:13px;margin-top:6px">Semua berkas Anda harus dikunci oleh admin terlebih dahulu.</div>
-    </div>`;
+  const hasAccess = allLocked || manualAccess;
+
+  // Tampilkan status bar
+  if (hasAccess) {
+    const reason = allLocked
+      ? '<span class="badge badge-uploaded"><i class="fas fa-lock"></i> Semua berkas terkunci</span>'
+      : '<span class="badge badge-revision"><i class="fas fa-user-shield"></i> Akses manual dari admin</span>';
+    statusBar.innerHTML = `
+      <div class="card" style="border-left:4px solid var(--c-accent)">
+        <div class="card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <i class="fas fa-unlock" style="font-size:20px;color:var(--c-accent)"></i>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--text-1)">Akses Berkas Final Tersedia</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px">Selamat! Anda dapat mengakses seluruh dokumen di bawah ini.</div>
+          </div>
+          ${reason}
+        </div>
+      </div>`;
+    lockedState.style.display = 'none';
+    openState.style.display   = 'block';
+  } else {
+    // Hitung progress
+    const lockedCount = subsArr.filter(s => s.status === 'locked').length;
+    const totalNeeded = assigned.length * 3;
+    const pct = totalNeeded > 0 ? Math.round(lockedCount/totalNeeded*100) : 0;
+    statusBar.innerHTML = `
+      <div class="card" style="border-left:4px solid var(--border)">
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <i class="fas fa-hourglass-half" style="font-size:18px;color:var(--text-3)"></i>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:var(--text-1)">Menunggu verifikasi admin</div>
+              <div style="font-size:12px;color:var(--text-3)">Progres berkas dikunci: ${lockedCount} dari ${totalNeeded} slot</div>
+            </div>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill ${pct>=80?'good':pct>=40?'medium':''}" style="width:${pct}%"></div>
+          </div>
+        </div>
+      </div>`;
+    lockedState.style.display = 'block';
+    openState.style.display   = 'none';
     return;
   }
 
+  // ─── Render file final dari admin ───────────────────────────
+  const adminItems = [
+    {
+      url:   finalFiles.naskah_url,
+      label: finalFiles.naskah_label || 'Naskah Soal Final',
+      icon:  'fas fa-file-lines',
+      color: '#1B3A6B',
+      sub:   'Naskah soal SAT final yang telah dikompilasi admin'
+    },
+    {
+      url:   finalFiles.kisi_url,
+      label: finalFiles.kisi_label || 'Kisi-kisi Final',
+      icon:  'fas fa-list-check',
+      color: '#1A7A4A',
+      sub:   'Kisi-kisi final yang telah dikompilasi admin'
+    },
+  ];
+
+  adminDocs.innerHTML = adminItems.map(item => `
+    <div style="background:${item.url ? '#FAFBFF' : '#F8F9FB'};border:1.5px solid ${item.url ? item.color+'30' : 'var(--border)'};border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:8px;background:${item.color}15;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="${item.icon}" style="font-size:18px;color:${item.color}"></i>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-1)">${item.label}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${item.sub}</div>
+        </div>
+      </div>
+      ${item.url
+        ? `<a href="${item.url}" target="_blank" class="btn btn-solid-primary btn-sm" style="text-decoration:none;justify-content:center">
+             <i class="fas fa-download"></i> Unduh / Buka
+           </a>`
+        : `<div style="text-align:center;font-size:12px;color:var(--text-3);padding:6px;border:1px dashed var(--border);border-radius:6px">Belum tersedia</div>`
+      }
+    </div>
+  `).join('');
+
+  // ─── Render folder per kelas ─────────────────────────────────
   grid.innerHTML = assigned.map(k => {
     const klsLinks = links[k] || {};
     const kelasNum = k.replace('kelas','');
-    const items = [
-      { label: 'Kartu Soal', icon: 'fas fa-file-word',  color: '#1565C0', url: klsLinks.kartu },
-      { label: 'Kisi-kisi',  icon: 'fas fa-list-check', color: '#1A7A4A', url: klsLinks.kisi },
-      { label: 'Naskah Soal',icon: 'fas fa-file-lines', color: '#B7600A', url: klsLinks.naskah },
-      { label: 'Folder Lengkap', icon: 'fas fa-folder', color: '#C8990A', url: klsLinks.folder },
-    ];
-    const hasAny = items.some(i => i.url);
+    const folderItems = [
+      { label: 'Folder Kartu Soal',  icon: 'fas fa-file-word',  color: '#1565C0', url: klsLinks.kartu  || klsLinks.kartu_link },
+      { label: 'Folder Kisi-kisi',   icon: 'fas fa-list-check', color: '#1A7A4A', url: klsLinks.kisi   || klsLinks.kisi_link  },
+      { label: 'Folder Naskah Soal', icon: 'fas fa-file-lines', color: '#B7600A', url: klsLinks.naskah || klsLinks.naskah_link},
+      { label: 'Semua Folder',       icon: 'fas fa-folder-open',color: '#C8990A', url: klsLinks.folder },
+    ].filter(i => i.url);
+
     return `
       <div class="card">
-        <div class="card-header"><h3>Kelas ${kelasNum}</h3></div>
+        <div class="card-header">
+          <h3>Kelas ${kelasNum}</h3>
+          <span class="badge badge-locked" style="font-size:10px"><i class="fas fa-check"></i> Terverifikasi</span>
+        </div>
         <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
-          ${hasAny
-            ? items.filter(i => i.url).map(i => `
-                <a href="${i.url}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text-1);transition:all .15s" onmouseover="this.style.borderColor='${i.color}'" onmouseout="this.style.borderColor='var(--border)'">
-                  <i class="${i.icon}" style="color:${i.color};font-size:16px;width:20px;text-align:center"></i>
+          ${folderItems.length > 0
+            ? folderItems.map(i => `
+                <a href="${i.url}" target="_blank"
+                   style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text-1);transition:border-color .15s"
+                   onmouseover="this.style.borderColor='${i.color}';this.style.background='${i.color}08'"
+                   onmouseout="this.style.borderColor='var(--border)';this.style.background=''">
+                  <i class="${i.icon}" style="color:${i.color};font-size:15px;width:18px;text-align:center;flex-shrink:0"></i>
                   <span style="font-size:13px;font-weight:500">${i.label}</span>
                   <i class="fas fa-external-link-alt" style="margin-left:auto;font-size:11px;color:var(--text-3)"></i>
                 </a>
               `).join('')
-            : `<div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">Link belum diset admin.</div>`
+            : `<div style="text-align:center;padding:16px;color:var(--text-3);font-size:12px">Link folder belum diset admin.</div>`
           }
         </div>
       </div>
